@@ -1,0 +1,92 @@
+/* ── Sidebar Container ───────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+}
+
+.sidebar__sticky {
+  position: sticky;
+  top: calc(var(--nav-height) + var(--space-4));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Sidebar Card */
+.sidebar-card {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.sidebar-card__header {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg-subtle);
+}
+
+.sidebar-card__body {
+  padding: var(--space-2);
+}
+
+/* Trending Hashtag Item */
+.trending-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+  gap: var(--space-2);
+}
+.trending-item:hover {
+  background-color: var(--color-bg-hover);
+  text-decoration: none;
+}
+
+.trending-item__tag {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-primary-600);
+  truncate: true;
+}
+
+.trending-item__count {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  background-color: var(--color-gray-100);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+/* Quick link items */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+.sidebar-link:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-primary-600);
+  text-decoration: none;
+}
+
+.sidebar-link__icon { font-size: 16px; }
+
+/* ── Hide on smaller screens ─────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .sidebar { display: none; }
+}

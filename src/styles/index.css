@@ -1,0 +1,180 @@
+/* ── Tailwind ─────────────────────────────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Import all stylesheets ──────────────────────────────────────── */
+@import './variables.css';
+
+/* Components */
+@import './components/navbar.css';
+@import './components/sidebar.css';
+@import './components/post-card.css';
+@import './components/comment.css';
+@import './components/story.css';
+@import './components/avatar.css';
+@import './components/button.css';
+@import './components/form.css';
+@import './components/modal.css';
+@import './components/badge.css';
+@import './components/spinner.css';
+@import './components/notification.css';
+
+/* Pages */
+@import './pages/home.css';
+@import './pages/feed.css';
+@import './pages/auth.css';
+@import './pages/profile.css';
+@import './pages/post-detail.css';
+@import './pages/search.css';
+@import './pages/notifications.css';
+@import './pages/stories.css';
+@import './pages/admin.css';
+
+/* ── Global Base ─────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* ── Typography ──────────────────────────────────────────────────── */
+h1 { font-size: var(--text-3xl); font-weight: 700; line-height: 1.2; }
+h2 { font-size: var(--text-2xl); font-weight: 700; line-height: 1.3; }
+h3 { font-size: var(--text-xl);  font-weight: 600; line-height: 1.4; }
+h4 { font-size: var(--text-lg);  font-weight: 600; line-height: 1.4; }
+h5 { font-size: var(--text-base);font-weight: 600; }
+h6 { font-size: var(--text-sm);  font-weight: 600; }
+
+p  { line-height: var(--leading-relaxed); }
+a  { color: var(--color-primary-600); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+img, video {
+  max-width: 100%;
+  display: block;
+}
+
+/* ── Layout Wrappers ─────────────────────────────────────────────── */
+.app-container {
+  min-height: 100vh;
+  background-color: var(--color-bg-page);
+}
+
+.page-wrapper {
+  max-width: var(--max-width-page);
+  margin: 0 auto;
+  padding: var(--nav-height) var(--space-4) var(--space-12);
+}
+
+/* Three-column layout: left sidebar | main | right sidebar */
+.content-grid {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr var(--sidebar-width);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* Two-column: main | right sidebar */
+.content-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr var(--sidebar-width);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* Single column (post detail, profile, auth) */
+.content-single {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.content-wide {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ── Utility Classes ─────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* ── Responsive Breakpoints ──────────────────────────────────────── */
+/* xs  < 480px  (small phones) */
+/* sm  < 640px  (large phones) */
+/* md  < 768px  (tablets portrait) */
+/* lg  < 1024px (tablets landscape / small laptops) */
+/* xl  < 1280px (desktops) */
+/* 2xl > 1280px (large desktops) */
+
+@media (max-width: 1023px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+  .content-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .page-wrapper {
+    padding: calc(var(--nav-height) + var(--space-2)) var(--space-3) var(--space-20);
+  }
+}
+
+@media (max-width: 479px) {
+  .page-wrapper {
+    padding: calc(var(--nav-height) + var(--space-2)) var(--space-2) var(--space-20);
+  }
+}

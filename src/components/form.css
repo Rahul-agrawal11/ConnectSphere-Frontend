@@ -1,0 +1,205 @@
+/* ── Form Group ──────────────────────────────────────────────────── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.form-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.form-label--required::after {
+  content: ' *';
+  color: var(--color-danger-500);
+}
+
+.form-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+
+.form-error {
+  font-size: var(--text-xs);
+  color: var(--color-danger-600);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Input Base ──────────────────────────────────────────────────── */
+.input,
+input[type="text"]:not(.raw),
+input[type="email"]:not(.raw),
+input[type="password"]:not(.raw),
+input[type="search"]:not(.raw),
+input[type="url"]:not(.raw),
+input[type="number"]:not(.raw) {
+  display: block;
+  width: 100%;
+  height: 42px;
+  padding: 0 var(--space-4);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  outline: none;
+  transition: border-color var(--transition-fast),
+              box-shadow var(--transition-fast);
+  -webkit-appearance: none;
+}
+
+.input::placeholder,
+input[type="text"]:not(.raw)::placeholder,
+input[type="email"]:not(.raw)::placeholder,
+input[type="password"]:not(.raw)::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.input:hover,
+input[type="text"]:not(.raw):hover {
+  border-color: var(--color-border-strong);
+}
+
+.input:focus,
+input[type="text"]:not(.raw):focus,
+input[type="email"]:not(.raw):focus,
+input[type="password"]:not(.raw):focus,
+input[type="search"]:not(.raw):focus,
+input[type="url"]:not(.raw):focus,
+input[type="number"]:not(.raw):focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+
+.input--error { border-color: var(--color-danger-500) !important; }
+.input--error:focus {
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.15) !important;
+}
+
+/* Rounded pill input */
+.input--pill { border-radius: var(--radius-full); }
+
+/* Sizes */
+.input--sm { height: 34px; padding: 0 var(--space-3); font-size: var(--text-xs); }
+.input--lg { height: 50px; padding: 0 var(--space-5); font-size: var(--text-base); }
+
+/* ── Textarea ────────────────────────────────────────────────────── */
+.textarea,
+textarea:not(.raw) {
+  display: block;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  outline: none;
+  resize: vertical;
+  min-height: 100px;
+  line-height: var(--leading-relaxed);
+  transition: border-color var(--transition-fast),
+              box-shadow var(--transition-fast);
+}
+.textarea:hover { border-color: var(--color-border-strong); }
+.textarea:focus,
+textarea:not(.raw):focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+.textarea::placeholder { color: var(--color-text-tertiary); }
+
+/* ── Select ──────────────────────────────────────────────────────── */
+.select,
+select:not(.raw) {
+  display: block;
+  width: 100%;
+  height: 42px;
+  padding: 0 var(--space-8) 0 var(--space-4);
+  font-size: var(--text-sm);
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-surface);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  outline: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast),
+              box-shadow var(--transition-fast);
+}
+.select:focus,
+select:not(.raw):focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+
+/* ── Char Counter ────────────────────────────────────────────────── */
+.char-counter {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  text-align: right;
+  margin-top: 4px;
+}
+.char-counter--warning { color: var(--color-warning-600); }
+.char-counter--danger  { color: var(--color-danger-600); }
+
+/* ── Search Input (with icon) ────────────────────────────────────── */
+.search-field {
+  position: relative;
+}
+.search-field__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-tertiary);
+  font-size: 15px;
+  pointer-events: none;
+}
+.search-field .input { padding-left: 38px; }
+
+/* ── Visibility Selector ─────────────────────────────────────────── */
+.visibility-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.visibility-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-3);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: none;
+  text-align: left;
+}
+.visibility-option:hover { border-color: var(--color-primary-300); }
+.visibility-option--active {
+  border-color: var(--color-primary-500);
+  background-color: var(--color-primary-50);
+}
+
+.visibility-option__icon  { font-size: 20px; }
+.visibility-option__label { font-size: var(--text-sm); font-weight: 600; color: var(--color-text-primary); }
+.visibility-option__desc  { font-size: var(--text-xs); color: var(--color-text-tertiary); }
+
+@media (max-width: 479px) {
+  .visibility-group { grid-template-columns: 1fr; gap: var(--space-1); }
+  .visibility-option { flex-direction: row; align-items: center; gap: var(--space-2); }
+}

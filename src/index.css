@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: #f3f4f6;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Story ring animation */
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 2px #3b82f6; }
+  50%       { box-shadow: 0 0 0 4px #3b82f6; }
+}
+.story-ring { animation: pulse-ring 2s infinite; }
+
+/* Reaction emoji hover */
+.reaction-btn:hover { transform: scale(1.2); }
+.reaction-btn { transition: transform 0.15s; cursor: pointer; }
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+}

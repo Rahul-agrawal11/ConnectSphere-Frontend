@@ -1,0 +1,94 @@
+/* ── Home Page ───────────────────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, #7c3aed 100%);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-12) var(--space-8);
+  text-align: center;
+  margin-bottom: var(--space-6);
+  color: #fff;
+}
+
+.hero__title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: var(--space-2);
+}
+
+.hero__subtitle {
+  font-size: var(--text-base);
+  color: rgba(255,255,255,0.85);
+  margin-bottom: var(--space-6);
+}
+
+.hero__cta {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.hero__cta-btn {
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  border-radius: var(--radius-2xl);
+  text-decoration: none;
+  transition: all var(--transition-base);
+}
+.hero__cta-btn--primary {
+  background-color: #fff;
+  color: var(--color-primary-700);
+}
+.hero__cta-btn--primary:hover {
+  background-color: var(--color-primary-50);
+  text-decoration: none;
+}
+.hero__cta-btn--outline {
+  border: 2px solid rgba(255,255,255,0.5);
+  color: #fff;
+}
+.hero__cta-btn--outline:hover {
+  border-color: rgba(255,255,255,0.8);
+  background-color: rgba(255,255,255,0.1);
+  text-decoration: none;
+}
+
+/* Features row */
+.home-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.feature-card {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.feature-card__icon { font-size: 32px; margin-bottom: var(--space-2); }
+.feature-card__title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+.feature-card__desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 767px) {
+  .hero { padding: var(--space-8) var(--space-4); border-radius: var(--radius-xl); }
+  .home-features { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 479px) {
+  .hero { border-radius: var(--radius-lg); }
+  .hero__cta { flex-direction: column; align-items: stretch; }
+  .home-features { grid-template-columns: 1fr; }
+}
