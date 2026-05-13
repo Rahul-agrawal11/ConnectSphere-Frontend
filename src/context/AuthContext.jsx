@@ -1,102 +1,66 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { authApi } from '../api/authApi';
+import { createContext, useState, useEffect, useCallback } from 'react';
+import { getMyProfile } from '../api/authApi';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
-  // Initialise user and token from localStorage on first render
-  const [user, setUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem('cs_user');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
+export const AuthProvider = ({ children }) => {
+  const [user, setUser]       = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      fetchProfile();
+    } else {
+      setLoading(false);
     }
-  });
-
-  const [token, setToken] = useState(() =>
-    localStorage.getItem('cs_token') || null
-  );
-
-  // ── Email / Password login ───────────────────────────────────────────────
-  const login = useCallback(async (credentials) => {
-    // credentials = { emailOrUsername, password }
-    const res = await authApi.login(credentials);
-    // Backend: ApiResponse<AuthResponse>.data
-    const data = res.data.data;
-    const { accessToken, refreshToken, userId, username, email, role } = data;
-
-    const userObj = { userId, username, email, role };
-
-    localStorage.setItem('cs_token',   accessToken);
-    localStorage.setItem('cs_refresh', refreshToken);
-    localStorage.setItem('cs_user',    JSON.stringify(userObj));
-
-    setToken(accessToken);
-    setUser(userObj);
-    return userObj;
   }, []);
 
-  // ── OAuth2 success (called by OAuth2Redirect page) ───────────────────────
-  // Token is already in localStorage when this is called.
-  const handleOAuthSuccess = useCallback((accessToken, userObj) => {
-    setToken(accessToken);
-    setUser(userObj);
-  }, []);
-
-  // ── Register ─────────────────────────────────────────────────────────────
-  const register = useCallback(async (formData) => {
-    // Returns ApiResponse<UserProfileResponse>
-    const res = await authApi.register(formData);
-    return res.data;
-  }, []);
-
-  // ── Logout ────────────────────────────────────────────────────────────────
-  const logout = useCallback(async () => {
+  const fetchProfile = async () => {
     try {
-      // Backend invalidates the refresh token stored in DB
-      await authApi.logout();
+      const res = await getMyProfile();
+      setUser(res.data.data);
     } catch {
-      // Always clear local state even if backend call fails
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
-    localStorage.removeItem('cs_token');
-    localStorage.removeItem('cs_refresh');
-    localStorage.removeItem('cs_user');
-    setToken(null);
+  };
+
+  // FIX: setLoading(false) so ProtectedRoute never stays stuck after OAuth
+  const loginUser = useCallback((authResponse) => {
+    localStorage.setItem('accessToken',  authResponse.accessToken);
+    if (authResponse.refreshToken) {
+      localStorage.setItem('refreshToken', authResponse.refreshToken);
+    }
+    setUser({
+      id:       authResponse.userId,
+      username: authResponse.username,
+      email:    authResponse.email,
+      role:     authResponse.role,
+    });
+    setLoading(false);
+  }, []);
+
+  const logoutUser = useCallback(() => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     setUser(null);
   }, []);
 
-  // ── Update user fields in context + localStorage ─────────────────────────
-  const updateUser = useCallback((updates) => {
-    setUser(prev => {
-      const updated = { ...prev, ...updates };
-      localStorage.setItem('cs_user', JSON.stringify(updated));
-      return updated;
-    });
+  const refreshUser = useCallback(async () => {
+    await fetchProfile();
   }, []);
 
-  const isAdmin         = user?.role === 'ROLE_ADMIN' || user?.role === 'ADMIN';
-  const isAuthenticated = !!token && !!user;
+  const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      token,
-      isAuthenticated,
-      isAdmin,
-      login,
-      register,
-      logout,
-      updateUser,
-      handleOAuthSuccess,
-    }}>
+    <AuthContext.Provider
+      value={{ user, loading, isAuthenticated, loginUser, logoutUser, refreshUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
-}
-
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
-  return ctx;
 };

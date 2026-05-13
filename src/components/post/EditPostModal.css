@@ -1,0 +1,48 @@
+.edit-post-modal {
+  width: 100%;
+  max-width: 520px;
+  background: var(--cs-surface);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-xl);
+}
+
+.edit-post-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+}
+
+.edit-post-modal__title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.15rem;
+  color: var(--cs-text-primary);
+}
+
+.edit-post-modal__textarea {
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--cs-text-primary);
+  background: transparent;
+  font-family: inherit;
+  min-height: 140px;
+}
+
+.edit-post-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 1px solid var(--cs-border);
+}
+
+.edit-post-modal__actions {
+  display: flex;
+  gap: 8px;
+}

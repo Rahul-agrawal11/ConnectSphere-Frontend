@@ -44,8 +44,8 @@ export default function Register() {
     };
 
     const field = (key, label, type = 'text', placeholder = '') => (
-        <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="form-group">
+            <label className="form-label">
                 {label}
             </label>
             <input
@@ -56,36 +56,33 @@ export default function Register() {
                     setErrors(p => ({ ...p, [key]: '' }));
                 }}
                 placeholder={placeholder}
-                className={`w-full px-4 py-2.5 border rounded-xl text-sm
-          focus:outline-none focus:ring-2 focus:ring-blue-300 transition
-          ${errors[key] ? 'border-red-300' : 'border-gray-200'}`}
+                className={`form-input ${errors[key] ? 'form-input--error' : ''}`.trim()}
             />
             {errors[key] && (
-                <p className="text-xs text-red-500 mt-1">{errors[key]}</p>
+                <p className="form-field-error">{errors[key]}</p>
             )}
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-            <div className="w-full max-w-md">
-                <div className="text-center mb-8">
-                    <Link to="/" className="text-2xl font-bold text-blue-600">
+        <div className="auth-page">
+            <div className="auth-shell">
+                <div className="auth-header">
+                    <Link to="/" className="auth-brand">
                         ConnectSphere
                     </Link>
-                    <p className="text-gray-500 text-sm mt-1">Create your account</p>
+                    <p className="auth-subtitle">Create your account</p>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="auth-card">
+                    <form onSubmit={handleSubmit} className="auth-form">
                         {field('fullName', 'Full Name (optional)', 'text', 'John Doe')}
                         {field('username', 'Username', 'text', 'johndoe')}
                         {field('email', 'Email', 'email', 'john@example.com')}
                         {field('password', 'Password', 'password', 'Min 8 characters')}
 
                         {errors.general && (
-                            <div className="bg-red-50 border border-red-200 text-red-700
-                              rounded-xl p-3 text-sm">
+                            <div className="form-error">
                                 {errors.general}
                             </div>
                         )}
@@ -93,17 +90,15 @@ export default function Register() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-2.5 bg-blue-600 text-white rounded-xl
-                         font-medium hover:bg-blue-700 transition
-                         disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="primary-button primary-button--full"
                         >
                             {loading ? 'Creating account…' : 'Create Account'}
                         </button>
                     </form>
 
-                    <p className="text-center text-sm text-gray-500 mt-5">
+                    <p className="auth-footer">
                         Already have an account?{' '}
-                        <Link to="/login" className="text-blue-600 hover:underline font-medium">
+                        <Link to="/login" className="link-button">
                             Sign in
                         </Link>
                     </p>

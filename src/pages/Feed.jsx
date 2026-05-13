@@ -1,115 +1,197 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { followApi } from '../api/followApi';
-import { postApi } from '../api/postApi';
-import { useAuth } from '../context/AuthContext';
+import { useState, useEffect, useCallback } from 'react';
+import { RefreshCw } from 'lucide-react';
+import useAuth from '../hooks/useAuth';
 import PostCard from '../components/post/PostCard';
 import StoryReel from '../components/story/StoryReel';
-import Sidebar from '../components/layout/Sidebar';
-import CreatePostInline from '../components/post/CreatePostInline';
 import Spinner from '../components/common/Spinner';
-import EmptyState from '../components/common/EmptyState';
-import { Link } from 'react-router-dom';
+import { getPublicFeed, getPersonalFeed } from '../api/postApi';
+import { getFollowingIds } from '../api/followApi';
+import './Feed.css';
 
-export default function Feed() {
+const Feed = () => {
   const { user } = useAuth();
+
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(0);
-  const [allPosts, setAllPosts] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
 
-  // ── Get following IDs ────────────────────────────────────────────────────
-  // Backend: GET /api/v1/follows/internal/following-ids/{userId}
-  // Returns: plain List<Long> (NOT wrapped in ApiResponse)
-  // axios wraps it in res.data → so followingData.data = List<Long>
-  const { data: followingData } = useQuery({
-    queryKey: ['followingIds', user?.userId],
-    queryFn: () => followApi.getFollowingIds(user.userId),
-    enabled: !!user?.userId,
-  });
-  // The /internal/following-ids endpoint returns a raw List<Long>, not ApiResponse
-  const followedUserIds = followingData?.data || [];
-
-  // ── Fetch personalised feed ──────────────────────────────────────────────
-  // Backend: GET /api/v1/posts/feed?followedUserIds=1&followedUserIds=2&page=0&size=10
-  // Returns: ApiResponse<Page<PostResponse>>
-  const { data: feedData, isLoading, isFetching } = useQuery({
-    queryKey: ['feed', JSON.stringify(followedUserIds), page],
-    queryFn: () => postApi.getFeed(followedUserIds, page),
-    enabled: true,
-    keepPreviousData: true,
-  });
-
-  useEffect(() => {
-    // axios response: res.data → ApiResponse
-    // ApiResponse.data → Page<PostResponse>
-    // Page.content → PostResponse[]
-    const newPosts = feedData?.data?.data?.content || [];
-    if (page === 0) {
-      setAllPosts(newPosts);
-    } else {
-      setAllPosts(prev => {
-        const ids = new Set(prev.map(p => p.id));
-        return [...prev, ...newPosts.filter(p => !ids.has(p.id))];
-      });
-    }
-  }, [feedData, page]);
-
-  const totalPages = feedData?.data?.data?.totalPages || 1;
-  const hasMore    = page < totalPages - 1;
-
-  const handleDelete = (postId) => {
-    setAllPosts(prev => prev.filter(p => p.id !== postId));
+  const normalizePosts = (data) => {
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.content)) return data.content;
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.data?.content)) return data.data.content;
+    return [];
   };
 
+  const isLastPage = (data) => {
+    const pageData = data?.data || data;
+    return pageData?.last ?? true;
+  };
+
+  const loadFeed = useCallback(
+    async (pageNum = 0, reset = false) => {
+      if (pageNum === 0) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      try {
+        let res;
+
+        if (user?.id) {
+          try {
+            const followingRes = await getFollowingIds(user.id);
+
+            const followingIds =
+              followingRes?.data?.data ||
+              followingRes?.data ||
+              [];
+
+            const feedUserIds = [
+              user.id,
+              ...followingIds,
+            ];
+
+            res = await getPersonalFeed(feedUserIds, pageNum, 10);
+          } catch {
+            res = await getPublicFeed(pageNum, 10);
+          }
+        } else {
+          res = await getPublicFeed(pageNum, 10);
+        }
+
+        const pageData = res?.data?.data || res?.data;
+        const list = normalizePosts(res?.data);
+
+        setPosts((prev) => (reset ? list : [...prev, ...list]));
+        setHasMore(!isLastPage(pageData));
+        setPage(pageNum);
+      } catch (error) {
+        console.error('Failed to load feed:', error);
+
+        if (reset) {
+          setPosts([]);
+        }
+
+        setHasMore(false);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [user]
+  );
+
+  useEffect(() => {
+    loadFeed(0, true);
+  }, [loadFeed]);
+
+  useEffect(() => {
+    const refreshFeed = () => {
+      loadFeed(0, true);
+    };
+
+    window.addEventListener('cs:postCreated', refreshFeed);
+
+    return () => {
+      window.removeEventListener('cs:postCreated', refreshFeed);
+    };
+  }, [loadFeed]);
+
+  const handlePostDeleted = useCallback((deletedId) => {
+    setPosts((prev) => prev.filter((post) => post.id !== deletedId));
+  }, []);
+
+  const handlePostUpdated = useCallback((updatedPost) => {
+    setPosts((prev) =>
+      prev.map((post) => (post.id === updatedPost.id ? updatedPost : post))
+    );
+  }, []);
+
   return (
-    <div className="flex gap-6">
-      <div className="flex-1 min-w-0">
-        {/* Stories */}
-        <StoryReel followedUserIds={followedUserIds} />
+    <div className="feed-page">
+      {user && <StoryReel />}
 
-        {/* Inline post creator */}
-        <CreatePostInline onCreated={(post) => setAllPosts(prev => [post, ...prev])} />
-
-        {/* Posts */}
-        {isLoading && page === 0 ? (
-          <Spinner center />
-        ) : allPosts.length === 0 ? (
-          <EmptyState
-            icon="📭"
-            title="Your feed is empty"
-            subtitle="Follow people to see their posts here"
-            action={
-              <Link
-                to="/suggestions"
-                className="px-5 py-2 bg-blue-600 text-white rounded-xl
-                           hover:bg-blue-700 transition text-sm font-medium"
-              >
-                Find People
-              </Link>
+      {user && (
+        <div
+          className="feed-create-prompt card"
+          role="button"
+          tabIndex={0}
+          onClick={() => {
+            document.dispatchEvent(new CustomEvent('openCreatePost'));
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              document.dispatchEvent(new CustomEvent('openCreatePost'));
             }
-          />
+          }}
+        >
+          <span className="feed-create-prompt__text">
+            What&apos;s on your mind, <strong>{user.username}</strong>?
+          </span>
+
+          <span className="feed-create-prompt__cta btn btn-primary btn-sm">
+            Post
+          </span>
+        </div>
+      )}
+
+      <div className="feed-posts">
+        {loading ? (
+          <div className="feed-loading">
+            <Spinner size={36} />
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="feed-empty card">
+            <span className="feed-empty__icon">📭</span>
+            <h3>No posts yet</h3>
+            <p>Follow people or create the first post!</p>
+          </div>
         ) : (
-          <div className="space-y-4">
-            {allPosts.map(post => (
-              <PostCard key={post.id} post={post} onDelete={handleDelete} />
+          <>
+            {posts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                onDeleted={handlePostDeleted}
+                onUpdated={handlePostUpdated}
+              />
             ))}
 
             {hasMore && (
-              <div className="text-center py-4">
-                <button
-                  onClick={() => setPage(p => p + 1)}
-                  disabled={isFetching}
-                  className="px-6 py-2 border border-gray-300 text-gray-600
-                             rounded-xl hover:bg-gray-50 transition text-sm"
-                >
-                  {isFetching ? 'Loading…' : 'Load more'}
-                </button>
-              </div>
+              <button
+                type="button"
+                className="feed-load-more btn btn-outline btn-full"
+                onClick={() => loadFeed(page + 1)}
+                disabled={loadingMore}
+              >
+                {loadingMore ? (
+                  <>
+                    <Spinner size={16} /> Loading...
+                  </>
+                ) : (
+                  'Load more posts'
+                )}
+              </button>
             )}
-          </div>
+          </>
         )}
       </div>
 
-      <Sidebar />
+      <button
+        type="button"
+        className="feed-refresh-fab"
+        onClick={() => loadFeed(0, true)}
+        title="Refresh feed"
+        aria-label="Refresh feed"
+      >
+        <RefreshCw size={18} />
+      </button>
     </div>
   );
-}
+};
+
+export default Feed;

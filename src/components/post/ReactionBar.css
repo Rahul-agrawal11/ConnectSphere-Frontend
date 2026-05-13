@@ -1,0 +1,95 @@
+.reaction-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reaction-btn-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.reaction-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--cs-text-secondary);
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+
+.reaction-btn:hover {
+  background: var(--cs-surface-2);
+  color: var(--cs-primary);
+}
+
+.reaction-btn--active {
+  color: var(--cs-primary);
+}
+
+.reaction-btn__emoji {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Picker */
+.reaction-picker {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  display: flex;
+  gap: 4px;
+  background: var(--cs-surface);
+  border: 1px solid var(--cs-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  padding: 8px 10px;
+  z-index: 100;
+  white-space: nowrap;
+}
+
+.reaction-picker__item {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  padding: 4px;
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+  line-height: 1;
+}
+
+.reaction-picker__item:hover {
+  transform: scale(1.4) translateY(-4px);
+}
+
+.reaction-picker__item--selected {
+  background: var(--cs-primary-light);
+}
+
+/* Summary */
+.reaction-summary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reaction-summary__emojis {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 0.9rem;
+}
+
+.reaction-summary__count {
+  font-size: 0.8rem;
+  color: var(--cs-text-muted);
+  font-weight: 500;
+}

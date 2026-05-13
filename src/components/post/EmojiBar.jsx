@@ -17,15 +17,14 @@ export default function EmojiBar({ onSelect, onClose }) {
   return (
     <div
       ref={ref}
-      className="absolute bottom-full left-0 mb-1 bg-white border border-gray-200
-                 rounded-2xl shadow-lg p-2 flex gap-1 z-20"
+      className="emoji-picker"
     >
       {Object.entries(EMOJI_MAP).map(([type, emoji]) => (
         <button
           key={type}
           onClick={() => onSelect(type)}
           title={type}
-          className="reaction-btn text-2xl p-1 rounded-xl hover:bg-gray-100"
+          className="emoji-picker__button"
         >
           {emoji}
         </button>

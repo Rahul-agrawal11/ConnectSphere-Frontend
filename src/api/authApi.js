@@ -1,50 +1,65 @@
 import apiClient from './apiClient';
 
-export const authApi = {
-  // ── Public ──────────────────────────────────────────────────────────────
-  register: (data) =>
-    apiClient.post('/api/v1/auth/register', data),
+const AUTH_BASE = '/api/v1/auth';
 
-  login: (data) =>
-    apiClient.post('/api/v1/auth/login', data),
+// POST /api/v1/auth/register — sends OTP
+export const sendOtp = (data) =>
+  apiClient.post(`${AUTH_BASE}/register`, data);
+// data: { username, email, password, fullName? }
 
-  // Backend: POST /api/v1/auth/refresh?refreshToken=xxx  (query param, not body)
-  refreshToken: (refreshToken) =>
-    apiClient.post('/api/v1/auth/refresh', null, { params: { refreshToken } }),
+// POST /api/v1/auth/verify-otp — completes registration
+export const verifyOtp = (data) =>
+  apiClient.post(`${AUTH_BASE}/verify-otp`, data);
+// data: { email, otp }
 
-  // Backend: GET /api/v1/auth/search?query=xxx  (public, no auth needed)
-  searchUsers: (query) =>
-    apiClient.get('/api/v1/auth/search', { params: { query } }),
+// POST /api/v1/auth/login
+export const login = (data) =>
+  apiClient.post(`${AUTH_BASE}/login`, data);
+// data: { emailOrUsername, password }
 
-  // ── Authenticated ────────────────────────────────────────────────────────
-  logout: () =>
-    apiClient.post('/api/v1/auth/logout'),
+// POST /api/v1/auth/refresh?refreshToken=...
+export const refreshToken = (refreshToken) =>
+  apiClient.post(`${AUTH_BASE}/refresh?refreshToken=${refreshToken}`);
 
-  getProfile: () =>
-    apiClient.get('/api/v1/auth/profile'),
+// POST /api/v1/auth/logout (requires Bearer token)
+export const logout = () =>
+  apiClient.post(`${AUTH_BASE}/logout`);
 
-  getProfileById: (userId) =>
-    apiClient.get(`/api/v1/auth/profile/${userId}`),
+// GET /api/v1/auth/profile
+export const getMyProfile = () =>
+  apiClient.get(`${AUTH_BASE}/profile`);
 
-  updateProfile: (data) =>
-    apiClient.put('/api/v1/auth/profile', data),
+// GET /api/v1/auth/profile/:userId
+export const getProfileById = (userId) =>
+  apiClient.get(`${AUTH_BASE}/profile/${userId}`);
 
-  changePassword: (data) =>
-    apiClient.put('/api/v1/auth/password', data),
+// PUT /api/v1/auth/profile
+export const updateProfile = (data) =>
+  apiClient.put(`${AUTH_BASE}/profile`, data);
+// data: { username?, fullName?, bio?, profilePicUrl? }
 
-  deactivateAccount: () =>
-    apiClient.delete('/api/v1/auth/deactivate'),
+// PUT /api/v1/auth/password
+export const changePassword = (data) =>
+  apiClient.put(`${AUTH_BASE}/password`, data);
+// data: { currentPassword, newPassword }
 
-  // ── Admin ────────────────────────────────────────────────────────────────
-  getAllUsers: () =>
-    apiClient.get('/api/v1/auth/admin/users'),
+// GET /api/v1/auth/search?query=...
+export const searchUsers = (query) =>
+  apiClient.get(`${AUTH_BASE}/search`, { params: { query } });
 
-  suspendUser: (userId) =>
-    apiClient.put(`/api/v1/auth/admin/users/${userId}/suspend`),
+// DELETE /api/v1/auth/deactivate
+export const deactivateAccount = () =>
+  apiClient.delete(`${AUTH_BASE}/deactivate`);
 
-  reactivateUser: (userId) =>
-    apiClient.put(`/api/v1/auth/admin/users/${userId}/reactivate`),
+// ── Admin ────────────────────────────────────────────
+export const getAllUsers = () =>
+  apiClient.get(`${AUTH_BASE}/admin/users`);
 
-  deleteUser: (userId) =>
-    apiClient.delete(`/api/v1/auth/admin/users/${userId}`),
-};
+export const suspendUser = (targetUserId) =>
+  apiClient.put(`${AUTH_BASE}/admin/users/${targetUserId}/suspend`);
+
+export const reactivateUser = (targetUserId) =>
+  apiClient.put(`${AUTH_BASE}/admin/users/${targetUserId}/reactivate`);
+
+export const adminDeleteUser = (targetUserId) =>
+  apiClient.delete(`${AUTH_BASE}/admin/users/${targetUserId}`);

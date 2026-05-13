@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { searchApi } from '../api/searchApi';
 import { postApi } from '../api/postApi';
 import PostCard from '../components/post/PostCard';
-import Spinner from '../components/common/Spinner';
 import EmptyState from '../components/common/EmptyState';
 
 export default function HashtagFeed() {
@@ -30,12 +29,12 @@ export default function HashtagFeed() {
     // }));
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="page-container page-container--narrow">
             {/* Header */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5 mb-4 shadow-sm">
-                <h1 className="text-2xl font-bold text-blue-600">#{tag}</h1>
+            <div className="hashtag-header-card">
+                <h1 className="hashtag-header-card__title">#{tag}</h1>
                 {hashtag && (
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="hashtag-header-card__meta">
                         {hashtag.postCount} posts
                     </p>
                 )}
@@ -48,7 +47,7 @@ export default function HashtagFeed() {
                     subtitle={`Be the first to post with #${tag}`}
                 />
             ) : (
-                <div className="space-y-4">
+                <div className="content-list">
                     {postIds.map(postId => (
                         <PostById key={postId} postId={postId} />
                     ))}
@@ -67,9 +66,9 @@ function PostById({ postId }) {
 
     if (isLoading) {
         return (
-            <div className="bg-white rounded-xl border border-gray-200 p-4 h-24">
-                <div className="skeleton h-4 w-1/3 mb-2 rounded" />
-                <div className="skeleton h-3 w-full rounded" />
+            <div className="skeleton-card">
+                <div className="skeleton-line skeleton-line--short" />
+                <div className="skeleton-line" />
             </div>
         );
     }

@@ -1,24 +1,44 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { useNotifications } from '../../context/NotificationContext';
+import {
+  Home, Search, Bell, User, LogOut, Menu, X,
+  MessageSquare, Hash, Plus, Shield,
+} from 'lucide-react';
+import useAuth from '../../hooks/useAuth';
 import Avatar from '../common/Avatar';
-import toast from 'react-hot-toast';
+import { getUnreadCount } from '../../api/notificationApi';
+import { logout as apiLogout } from '../../api/authApi';
+import { useToast } from '../common/Toast';
+import './Navbar.css';
 
-export default function Navbar() {
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
-  const { unreadCount } = useNotifications();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const menuRef = useRef(null);
+const Navbar = ({ onMobileMenuToggle, mobileMenuOpen, onCreatePost }) => {
+  const { user, logoutUser } = useAuth();
+  const { addToast }         = useToast();
+  const navigate             = useNavigate();
+  const location             = useLocation();
+  const [unread, setUnread]  = useState(0);
+  const [dropOpen, setDropOpen] = useState(false);
+  const dropRef              = useRef(null);
 
-  // Close dropdown when clicking outside
+  // Fetch unread badge count
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => {
+      try {
+        const res = await getUnreadCount();
+        setUnread(res.data.data || 0);
+      } catch {}
+    };
+    load();
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setMenuOpen(false);
+      if (dropRef.current && !dropRef.current.contains(e.target)) {
+        setDropOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -26,174 +46,141 @@ export default function Navbar() {
   }, []);
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/');
-    toast.success('Logged out');
+    try {
+      await apiLogout();
+    } catch {}
+    logoutUser();
+    navigate('/login');
+    addToast('Logged out successfully', 'success');
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-    }
-  };
+  const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
-
+    <header className="navbar">
+      <div className="navbar__inner">
         {/* Logo */}
-        <Link to="/" className="font-bold text-blue-600 text-xl flex-shrink-0">
-          ConnectSphere
+        <Link to="/" className="navbar__logo">
+          <span className="navbar__logo-icon">◈</span>
+          <span className="navbar__logo-text">ConnectSphere</span>
         </Link>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-sm hidden sm:block">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search posts, users, #hashtags…"
-            className="w-full px-4 py-2 text-sm bg-gray-100 rounded-full
-                       border-transparent focus:outline-none focus:ring-2
-                       focus:ring-blue-300 focus:bg-white transition"
-          />
-        </form>
+        {/* Desktop nav links */}
+        <nav className="navbar__links" aria-label="Main navigation">
+          <Link to="/" className={`navbar__link ${isActive('/') ? 'navbar__link--active' : ''}`}>
+            <Home size={20} />
+            <span>Home</span>
+          </Link>
+          <Link
+            to="/search"
+            className={`navbar__link ${isActive('/search') ? 'navbar__link--active' : ''}`}
+          >
+            <Search size={20} />
+            <span>Search</span>
+          </Link>
+          <Link
+            to="/notifications"
+            className={`navbar__link ${isActive('/notifications') ? 'navbar__link--active' : ''}`}
+          >
+            <Bell size={20} />
+            <span>Alerts</span>
+            {unread > 0 && (
+              <span className="navbar__badge">{unread > 99 ? '99+' : unread}</span>
+            )}
+          </Link>
+        </nav>
 
-        <div className="flex items-center gap-2 ml-auto">
-          {isAuthenticated ? (
-            <>
-              {/* Nav Links */}
-              <NavLink to="/feed" label="Feed" active={location.pathname === '/feed'} />
-              <NavLink to="/posts/create" label="+ Post" active={false} highlight />
+        {/* Actions */}
+        <div className="navbar__actions">
+          {/* Create post */}
+          <button
+            className="btn btn-primary btn-sm navbar__create-btn"
+            onClick={onCreatePost}
+            title="New Post"
+          >
+            <Plus size={16} />
+            <span>Post</span>
+          </button>
 
-              {/* Notifications */}
-              <Link
-                to="/notifications"
-                className="relative p-2 rounded-lg hover:bg-gray-100 transition"
-              >
-                <span className="text-xl">🔔</span>
-                {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white
-                                   text-xs rounded-full min-w-[18px] h-[18px] flex
-                                   items-center justify-center font-medium px-1">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-              </Link>
+          {/* User dropdown */}
+          <div className="navbar__user-wrap" ref={dropRef}>
+            <button
+              className="navbar__avatar-btn"
+              onClick={() => setDropOpen((p) => !p)}
+              aria-expanded={dropOpen}
+              aria-label="User menu"
+            >
+              <Avatar
+                src={user?.profilePicUrl}
+                username={user?.username}
+                size={36}
+              />
+            </button>
 
-              {/* Avatar Dropdown */}
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setMenuOpen(v => !v)}
-                  className="flex items-center gap-2 p-1 rounded-lg hover:bg-gray-100 transition"
-                >
+            {dropOpen && (
+              <div className="navbar__dropdown animate-scale-in">
+                <div className="navbar__dropdown-header">
                   <Avatar
                     src={user?.profilePicUrl}
-                    name={user?.username}
-                    size={8}
+                    username={user?.username}
+                    size={44}
                   />
-                  <span className="text-sm font-medium hidden md:block">
-                    {user?.username}
-                  </span>
-                  <span className="text-gray-400 text-xs">▾</span>
-                </button>
-
-                {menuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-52 bg-white
-                                  border border-gray-200 rounded-xl shadow-lg py-1 z-50">
-                    <MenuLink
-                      to={`/profile/${user?.userId}`}
-                      label="My Profile"
-                      onClick={() => setMenuOpen(false)}
-                    />
-                    <MenuLink
-                      to="/stories"
-                      label="Stories"
-                      onClick={() => setMenuOpen(false)}
-                    />
-                    <MenuLink
-                      to="/suggestions"
-                      label="Suggestions"
-                      onClick={() => setMenuOpen(false)}
-                    />
-                    <MenuLink
-                      to="/edit-profile"
-                      label="Edit Profile"
-                      onClick={() => setMenuOpen(false)}
-                    />
-                    {isAdmin && (
-                      <>
-                        <div className="border-t border-gray-100 my-1" />
-                        <MenuLink
-                          to="/admin"
-                          label="⚙ Admin Panel"
-                          onClick={() => setMenuOpen(false)}
-                        />
-                      </>
-                    )}
-                    <div className="border-t border-gray-100 my-1" />
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm
-                                 text-red-600 hover:bg-red-50 transition"
-                    >
-                      Logout
-                    </button>
+                  <div>
+                    <p className="navbar__dropdown-name">{user?.fullName || user?.username}</p>
+                    <p className="navbar__dropdown-handle">@{user?.username}</p>
                   </div>
+                </div>
+                <hr className="divider" />
+                <Link
+                  to={`/profile/${user?.id}`}
+                  className="navbar__dropdown-item"
+                  onClick={() => setDropOpen(false)}
+                >
+                  <User size={16} /> Profile
+                </Link>
+                <Link
+                  to="/notifications"
+                  className="navbar__dropdown-item"
+                  onClick={() => setDropOpen(false)}
+                >
+                  <Bell size={16} /> Notifications
+                  {unread > 0 && <span className="badge">{unread}</span>}
+                </Link>
+                {user?.role === 'ADMIN' && (
+                  <>
+                    <hr className="divider" />
+                    <Link
+                      to="/admin"
+                      className="navbar__dropdown-item"
+                      onClick={() => setDropOpen(false)}
+                    >
+                      <Shield size={16} /> Admin Panel
+                    </Link>
+                  </>
                 )}
+                <hr className="divider" />
+                <button
+                  className="navbar__dropdown-item navbar__dropdown-item--danger"
+                  onClick={handleLogout}
+                >
+                  <LogOut size={16} /> Sign Out
+                </button>
               </div>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100
-                           rounded-lg transition"
-              >
-                Log in
-              </Link>
-              <Link
-                to="/register"
-                className="px-4 py-2 text-sm bg-blue-600 text-white
-                           rounded-lg hover:bg-blue-700 transition font-medium"
-              >
-                Sign up
-              </Link>
-            </>
-          )}
+            )}
+          </div>
+
+          {/* Mobile hamburger */}
+          <button
+            className="navbar__mobile-toggle"
+            onClick={onMobileMenuToggle}
+            aria-label="Toggle mobile menu"
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </div>
-    </nav>
+    </header>
   );
-}
+};
 
-function NavLink({ to, label, active, highlight }) {
-  return (
-    <Link
-      to={to}
-      className={`px-3 py-2 text-sm rounded-lg font-medium transition
-        ${active
-          ? 'bg-blue-50 text-blue-600'
-          : highlight
-            ? 'bg-blue-600 text-white hover:bg-blue-700'
-            : 'text-gray-600 hover:bg-gray-100'
-        }`}
-    >
-      {label}
-    </Link>
-  );
-}
-
-function MenuLink({ to, label, onClick }) {
-  return (
-    <Link
-      to={to}
-      onClick={onClick}
-      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
-    >
-      {label}
-    </Link>
-  );
-}
+export default Navbar;

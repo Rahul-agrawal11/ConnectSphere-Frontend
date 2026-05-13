@@ -1,78 +1,117 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { NotificationProvider } from './context/NotificationContext';
-import PrivateRoute from './components/common/PrivateRoute';
-import AdminRoute from './components/common/AdminRoute';
-import Layout from './components/layout/Layout';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import { ToastProvider } from './components/common/Toast';
+import useAuth from './hooks/useAuth';
 
-// Pages
-import Home          from './pages/Home';
-import Login         from './pages/auth/Login';
-import Register      from './pages/auth/Register';
-import OAuth2Redirect from './pages/auth/OAuth2Redirect';
+// Layouts
+import MainLayout from './components/layout/MainLayout';
+import GuestLayout from './components/layout/GuestLayout';
+
+// Auth pages
+import Login      from './pages/Login';
+import Register   from './pages/Register';
+import VerifyOtp  from './pages/VerifyOtp';
+import OAuthCallback from './pages/OAuthCallback';
+
+// App pages
 import Feed          from './pages/Feed';
-import PostDetail    from './pages/post/PostDetail';
-import CreatePost    from './pages/post/CreatePost';
-import Search        from './pages/Search';
-import Profile       from './pages/user/Profile';
-import EditProfile   from './pages/user/EditProfile';
-import Followers     from './pages/user/Followers';
-import Following     from './pages/user/Following';
-import Suggestions   from './pages/user/Suggestions';
+import Profile       from './pages/Profile';
+import EditProfile   from './pages/EditProfile';
 import Notifications from './pages/Notifications';
-import HashtagFeed   from './pages/HashtagFeed';
-import Stories       from './pages/Stories';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminUsers     from './pages/admin/AdminUsers';
-import AdminPosts     from './pages/admin/AdminPosts';
-import NotFound       from './pages/NotFound';
+import Search        from './pages/Search';
 
-export default function App() {
+// Admin pages
+import AdminPanel from './pages/AdminPanel';
+
+import './App.css';
+
+// Admin Route Component
+const AdminRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+  
+  if (!user || user.role !== 'ADMIN') {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+// Guest Route Component
+const GuestRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+
+  // If user is logged in, redirect to main app
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <NotificationProvider>
+        <ToastProvider>
           <Routes>
-            {/* Public routes — no layout */}
+            {/* Public auth routes */}
             <Route path="/login"           element={<Login />} />
             <Route path="/register"        element={<Register />} />
-            {/* OAuth2 success handler: backend redirects here with ?token=&userId= */}
-            <Route path="/oauth2/redirect"  element={<OAuth2Redirect />} />
+            <Route path="/verify-otp"      element={<VerifyOtp />} />
+            <Route path="/oauth2/redirect" element={<OAuthCallback />} />
 
-            {/* Routes with navbar layout */}
-            <Route element={<Layout />}>
-              <Route path="/"              element={<Home />} />
-              <Route path="/search"        element={<Search />} />
-              {/* FIX: was /hashtags/${tag.tag} (JS template literal) — must be route param :tag */}
-              <Route path="/hashtags/:tag" element={<HashtagFeed />} />
-              <Route path="/posts/:id"     element={<PostDetail />} />
-              <Route path="/profile/:id"   element={<Profile />} />
-
-              {/* Protected routes */}
-              <Route element={<PrivateRoute />}>
-                <Route path="/feed"                     element={<Feed />} />
-                <Route path="/posts/create"             element={<CreatePost />} />
-                <Route path="/edit-profile"             element={<EditProfile />} />
-                <Route path="/profile/:id/followers"    element={<Followers />} />
-                <Route path="/profile/:id/following"    element={<Following />} />
-                <Route path="/suggestions"              element={<Suggestions />} />
-                <Route path="/notifications"            element={<Notifications />} />
-                <Route path="/stories"                  element={<Stories />} />
-              </Route>
-
-              {/* Admin routes */}
-              <Route element={<AdminRoute />}>
-                <Route path="/admin"        element={<AdminDashboard />} />
-                <Route path="/admin/users"  element={<AdminUsers />} />
-                <Route path="/admin/posts"  element={<AdminPosts />} />
-              </Route>
+            {/* Guest routes — public feed, public profile, public search */}
+            <Route
+              path="/guest"
+              element={
+                <GuestRoute>
+                  <GuestLayout />
+                </GuestRoute>
+              }
+            >
+              <Route index element={<Feed />} />
+              <Route path="profile/:userId" element={<Profile />} />
+              <Route path="search"          element={<Search />} />
             </Route>
 
-            <Route path="*" element={<NotFound />} />
+            {/* Admin routes */}
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminPanel />
+                </AdminRoute>
+              }
+            />
+
+            {/* Protected app routes — wrapped in MainLayout */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Feed />} />
+              <Route path="profile/:userId" element={<Profile />} />
+              <Route path="profile/edit"    element={<EditProfile />} />
+              <Route path="notifications"   element={<Notifications />} />
+              <Route path="search"          element={<Search />} />
+            </Route>
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </NotificationProvider>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );
 }
+
+export default App;

@@ -32,9 +32,9 @@ export default function AdminPosts() {
   });
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-800">
+    <div className="admin-page">
+      <div className="page-header">
+        <h1 className="page-title">
           Content Moderation ({allPosts.length})
         </h1>
         <input
@@ -42,52 +42,49 @@ export default function AdminPosts() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Filter posts…"
-          className="px-4 py-2 border border-gray-200 rounded-xl text-sm
-                     focus:outline-none focus:ring-2 focus:ring-blue-300 transition w-56"
+          className="admin-filter-input"
         />
       </div>
 
       {isLoading ? (
         <Spinner center />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+        <div className="table-card">
+          <table className="admin-table">
+            <thead>
               <tr>
                 {['Post', 'Author', 'Stats', 'Visibility', 'Actions'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold
-                                         text-gray-500 uppercase tracking-wide">
+                  <th key={h}>
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {posts.map(post => (
-                <tr key={post.id} className="hover:bg-gray-50 transition">
-                  <td className="px-4 py-3 max-w-xs">
-                    <p className="text-gray-800 line-clamp-2 text-xs">
+                <tr key={post.id}>
+                  <td className="admin-table__content-cell">
+                    <p className="admin-post-excerpt">
                       {post.content}
                     </p>
                     <TimeAgo
                       date={post.createdAt}
-                      className="text-xs text-gray-400 mt-0.5"
+                      className="admin-table__timestamp"
                     />
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-500">
+                  <td>
                     User #{post.authorId}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-500">
+                  <td>
                     <div>❤️ {post.likesCount}</div>
                     <div>💬 {post.commentsCount}</div>
                   </td>
-                  <td className="px-4 py-3">
-                    <span className="px-2 py-0.5 bg-gray-100 text-gray-600
-                                     rounded-full text-xs">
+                  <td>
+                    <span className="status-badge status-badge--neutral">
                       {post.visibility}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td>
                     <button
                       onClick={() => {
                         if (window.confirm('Remove this post?')) {
@@ -95,8 +92,7 @@ export default function AdminPosts() {
                         }
                       }}
                       disabled={deleteMutation.isPending}
-                      className="px-3 py-1 text-xs text-red-600 border border-red-200
-                                 rounded-lg hover:bg-red-50 transition disabled:opacity-50"
+                      className="danger-outline-button"
                     >
                       Remove
                     </button>

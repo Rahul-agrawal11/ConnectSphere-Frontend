@@ -1,37 +1,39 @@
 import apiClient from './apiClient';
 
-export const commentApi = {
-  // Backend DTO: { postId, parentCommentId?, content }
-  addComment: (data) =>
-    apiClient.post('/api/v1/comments', data),
+const COMMENTS_BASE = '/api/v1/comments';
 
-  getCommentById: (commentId) =>
-    apiClient.get(`/api/v1/comments/${commentId}`),
+// POST /api/v1/comments
+export const addComment = (data) =>
+  apiClient.post(COMMENTS_BASE, data);
+// data: { postId, content, parentCommentId? }
 
-  getCommentsByPost: (postId, page = 0, size = 20) =>
-    apiClient.get(`/api/v1/comments/post/${postId}`, { params: { page, size } }),
+// GET /api/v1/comments/:commentId
+export const getCommentById = (commentId) =>
+  apiClient.get(`${COMMENTS_BASE}/${commentId}`);
 
-  getReplies: (parentCommentId, page = 0, size = 10) =>
-    apiClient.get(`/api/v1/comments/${parentCommentId}/replies`, {
-      params: { page, size },
-    }),
+// GET /api/v1/comments/post/:postId?page=0&size=10
+export const getCommentsByPost = (postId, page = 0, size = 10) =>
+  apiClient.get(`${COMMENTS_BASE}/post/${postId}`, { params: { page, size } });
 
-  getCommentsByUser: (authorId, page = 0, size = 20) =>
-    apiClient.get(`/api/v1/comments/user/${authorId}`, { params: { page, size } }),
+// GET /api/v1/comments/:parentCommentId/replies?page=0&size=10
+export const getReplies = (parentCommentId, page = 0, size = 5) =>
+  apiClient.get(`${COMMENTS_BASE}/${parentCommentId}/replies`, {
+    params: { page, size },
+  });
 
-  getCommentCount: (postId) =>
-    apiClient.get(`/api/v1/comments/post/${postId}/count`),
+// GET /api/v1/comments/user/:authorId?page=0&size=10
+export const getCommentsByUser = (authorId, page = 0, size = 10) =>
+  apiClient.get(`${COMMENTS_BASE}/user/${authorId}`, { params: { page, size } });
 
-  getTotalCommentCount: (postId) =>
-    apiClient.get(`/api/v1/comments/post/${postId}/count/total`),
+// GET /api/v1/comments/post/:postId/count
+export const getCommentCount = (postId) =>
+  apiClient.get(`${COMMENTS_BASE}/post/${postId}/count`);
 
-  // Backend DTO: { content }
-  updateComment: (commentId, data) =>
-    apiClient.put(`/api/v1/comments/${commentId}`, data),
+// PUT /api/v1/comments/:commentId
+export const updateComment = (commentId, data) =>
+  apiClient.put(`${COMMENTS_BASE}/${commentId}`, data);
+// data: { content }
 
-  deleteComment: (commentId) =>
-    apiClient.delete(`/api/v1/comments/${commentId}`),
-
-  adminDeleteComment: (commentId) =>
-    apiClient.delete(`/api/v1/comments/admin/${commentId}`),
-};
+// DELETE /api/v1/comments/:commentId
+export const deleteComment = (commentId) =>
+  apiClient.delete(`${COMMENTS_BASE}/${commentId}`);

@@ -1,0 +1,23 @@
+/* ── Register-specific styles ────────────────────────── */
+.register-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  min-width: 0; /* FIX: prevent grid from overflowing its container */
+}
+
+.register-row .form-group {
+  min-width: 0; /* FIX: allow each grid cell to shrink */
+}
+
+.register-row .form-input {
+  width: 100%;
+  min-width: 0;        /* FIX: input won't exceed its cell */
+  box-sizing: border-box; /* FIX: padding included in width */
+}
+
+@media (max-width: 540px) {
+  .register-row {
+    grid-template-columns: 1fr; /* stack on small screens */
+  }
+}

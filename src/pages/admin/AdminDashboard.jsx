@@ -4,7 +4,6 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { authApi } from '../../api/authApi';
 import { searchApi } from '../../api/searchApi';
 import { notificationApi } from '../../api/notificationApi';
-import Spinner from '../../components/common/Spinner';
 import toast from 'react-hot-toast';
 
 export default function AdminDashboard() {
@@ -30,47 +29,45 @@ export default function AdminDashboard() {
   const adminUsers     = users.filter(u => u.role === 'ADMIN').length;
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
+    <div className="admin-page">
+      <h1 className="page-title">Admin Dashboard</h1>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="admin-stats-grid">
         {[
-          { label: 'Total Users',  value: totalUsers,     color: 'bg-blue-50 text-blue-700' },
-          { label: 'Active',       value: activeUsers,    color: 'bg-green-50 text-green-700' },
-          { label: 'Suspended',    value: suspendedUsers, color: 'bg-red-50 text-red-700' },
-          { label: 'Admins',       value: adminUsers,     color: 'bg-purple-50 text-purple-700' },
+          { label: 'Total Users',  value: totalUsers,     tone: 'admin-stat-card--blue' },
+          { label: 'Active',       value: activeUsers,    tone: 'admin-stat-card--green' },
+          { label: 'Suspended',    value: suspendedUsers, tone: 'admin-stat-card--red' },
+          { label: 'Admins',       value: adminUsers,     tone: 'admin-stat-card--purple' },
         ].map(stat => (
           <div key={stat.label}
-               className={`${stat.color} rounded-xl p-4 text-center`}>
-            <p className="text-3xl font-bold">{stat.value}</p>
-            <p className="text-sm font-medium mt-1">{stat.label}</p>
+               className={`admin-stat-card ${stat.tone}`}>
+            <p className="admin-stat-card__value">{stat.value}</p>
+            <p className="admin-stat-card__label">{stat.label}</p>
           </div>
         ))}
       </div>
 
       {/* Action Cards */}
-      <div className="grid md:grid-cols-3 gap-4 mb-6">
+      <div className="admin-actions-grid">
         <Link
           to="/admin/users"
-          className="bg-white rounded-xl border border-gray-200 p-5
-                     hover:border-blue-300 hover:shadow-sm transition"
+          className="admin-action-card"
         >
-          <div className="text-3xl mb-2">👥</div>
-          <h3 className="font-semibold text-gray-800">Manage Users</h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <div className="admin-action-card__icon">👥</div>
+          <h3 className="admin-action-card__title">Manage Users</h3>
+          <p className="admin-action-card__text">
             Suspend, reactivate, or delete accounts
           </p>
         </Link>
 
         <Link
           to="/admin/posts"
-          className="bg-white rounded-xl border border-gray-200 p-5
-                     hover:border-blue-300 hover:shadow-sm transition"
+          className="admin-action-card"
         >
-          <div className="text-3xl mb-2">📝</div>
-          <h3 className="font-semibold text-gray-800">Moderate Posts</h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <div className="admin-action-card__icon">📝</div>
+          <h3 className="admin-action-card__title">Moderate Posts</h3>
+          <p className="admin-action-card__text">
             Review and remove inappropriate content
           </p>
         </Link>
@@ -79,15 +76,14 @@ export default function AdminDashboard() {
       </div>
 
       {/* Trending Hashtags */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h3 className="font-semibold text-gray-800 mb-3">🔥 Trending Hashtags</h3>
-        <div className="flex flex-wrap gap-2">
+      <div className="section-card">
+        <h3 className="section-card__title">🔥 Trending Hashtags</h3>
+        <div className="hashtag-list">
           {trending.map(tag => (
             <Link
               key={tag.id}
               to={`/hashtags/${tag.tag}`}
-              className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full
-                         text-sm font-medium hover:bg-blue-100 transition"
+              className="hashtag-pill"
             >
               #{tag.tag} ({tag.postCount})
             </Link>
@@ -120,31 +116,28 @@ function BroadcastCard() {
   });
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <div className="text-3xl mb-2">📣</div>
-      <h3 className="font-semibold text-gray-800 mb-3">Broadcast</h3>
-      <div className="space-y-2">
+    <div className="admin-action-card">
+      <div className="admin-action-card__icon">📣</div>
+      <h3 className="admin-action-card__title">Broadcast</h3>
+      <div className="admin-broadcast-form">
         <input
           type="text"
           value={msg}
           onChange={e => setMsg(e.target.value)}
           placeholder="Message"
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm
-                     focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+          className="form-input"
         />
         <input
           type="text"
           value={ids}
           onChange={e => setIds(e.target.value)}
           placeholder="User IDs (comma-separated, e.g. 1,2,3)"
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm
-                     focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+          className="form-input"
         />
         <button
           onClick={() => mutation.mutate()}
           disabled={!msg.trim() || !ids.trim() || mutation.isPending}
-          className="w-full py-2 bg-red-600 text-white rounded-lg text-sm
-                     hover:bg-red-700 transition disabled:opacity-50 font-medium"
+          className="danger-button danger-button--full"
         >
           {mutation.isPending ? 'Sending…' : 'Send Broadcast'}
         </button>

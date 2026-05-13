@@ -1,0 +1,55 @@
+.oauth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 8px;
+}
+
+.oauth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 20px;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  border: 1.5px solid var(--cs-border);
+  background: var(--cs-surface);
+  color: var(--cs-text-primary);
+  font-family: inherit;
+  letter-spacing: 0.01em;
+}
+
+.oauth-btn:hover {
+  background: var(--cs-surface-2);
+  border-color: var(--cs-border-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.oauth-btn:active {
+  transform: translateY(0);
+}
+
+.oauth-btn__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+/* GitHub specific — dark icon on hover */
+.oauth-btn--github:hover {
+  background: #f6f8fa;
+  border-color: #d0d7de;
+}
+
+.oauth-btn--github .oauth-btn__icon {
+  color: #24292f;
+}

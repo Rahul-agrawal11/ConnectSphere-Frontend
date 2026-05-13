@@ -60,40 +60,40 @@ export default function CommentThread({ comment, postId }) {
   });
 
   return (
-    <div className="flex gap-3">
-      <Link to={`/profile/${comment.authorId}`} className="flex-shrink-0 mt-0.5">
+    <div className="comment-thread">
+      <Link to={`/profile/${comment.authorId}`} className="comment-thread__avatar">
         <Avatar src={author?.profilePicUrl} name={author?.username} size={8} />
       </Link>
 
-      <div className="flex-1 min-w-0">
+      <div className="comment-thread__content">
         {/* Comment bubble */}
-        <div className="bg-gray-50 rounded-2xl rounded-tl-sm px-3 py-2">
-          <div className="flex items-center gap-2 mb-0.5">
+        <div className="comment-bubble">
+          <div className="comment-bubble__meta">
             <Link
               to={`/profile/${comment.authorId}`}
-              className="text-sm font-medium text-gray-900 hover:text-blue-600"
+              className="comment-bubble__author"
             >
               {author?.username || `User #${comment.authorId}`}
             </Link>
             <TimeAgo
               date={comment.createdAt}
-              className="text-xs text-gray-400"
+              className="comment-bubble__time"
             />
           </div>
-          <p className="text-sm text-gray-800 whitespace-pre-wrap">
+          <p className="comment-bubble__text">
             {comment.content}
           </p>
         </div>
 
         {/* Comment actions */}
-        <div className="flex items-center gap-3 mt-1 ml-2">
-          <span className="text-xs text-gray-400">
+        <div className="comment-actions">
+          <span className="comment-actions__count">
             👍 {comment.likesCount}
           </span>
           {isAuthenticated && !comment.isReply && (
             <button
               onClick={() => setShowReplyBox(v => !v)}
-              className="text-xs text-gray-500 hover:text-blue-600 transition font-medium"
+              className="comment-actions__button"
             >
               Reply
             </button>
@@ -101,7 +101,7 @@ export default function CommentThread({ comment, postId }) {
           {comment.isReply === false && (
             <button
               onClick={() => setShowReplies(v => !v)}
-              className="text-xs text-gray-400 hover:text-gray-600 transition"
+              className="comment-actions__button comment-actions__button--muted"
             >
               {showReplies ? 'Hide replies' : 'View replies'}
             </button>
@@ -111,7 +111,7 @@ export default function CommentThread({ comment, postId }) {
               onClick={() => {
                 if (window.confirm('Delete comment?')) deleteMutation.mutate();
               }}
-              className="text-xs text-red-400 hover:text-red-600 transition ml-auto"
+              className="comment-actions__button comment-actions__button--danger"
             >
               Delete
             </button>
@@ -120,21 +120,19 @@ export default function CommentThread({ comment, postId }) {
 
         {/* Reply Box */}
         {showReplyBox && (
-          <div className="mt-2 flex gap-2">
+          <div className="reply-form">
             <Avatar
               src={user?.profilePicUrl}
               name={user?.username}
               size={7}
-              className="mt-0.5 flex-shrink-0"
+              className="reply-form__avatar"
             />
-            <div className="flex-1">
+            <div className="reply-form__body">
               <input
                 value={replyText}
                 onChange={e => setReplyText(e.target.value)}
                 placeholder={`Reply to ${author?.username}…`}
-                className="w-full px-3 py-1.5 text-sm bg-gray-100 rounded-full
-                           border-transparent focus:outline-none focus:ring-2
-                           focus:ring-blue-300 focus:bg-white transition"
+                className="reply-form__input"
                 onKeyDown={e => {
                   if (e.key === 'Enter' && replyText.trim()) {
                     e.preventDefault();
@@ -148,7 +146,7 @@ export default function CommentThread({ comment, postId }) {
 
         {/* Replies list */}
         {showReplies && replies.length > 0 && (
-          <div className="mt-2 ml-3 space-y-2 border-l-2 border-gray-100 pl-3">
+          <div className="replies-list">
             {replies.map(reply => (
               <CommentThread
                 key={reply.id}

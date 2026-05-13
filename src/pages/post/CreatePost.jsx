@@ -40,48 +40,42 @@ export default function CreatePost() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-gray-800 mb-5">
+    <div className="page-container page-container--narrow">
+      <div className="section-card section-card--spacious">
+        <h2 className="section-card__heading">
           Create Post
         </h2>
 
         {/* Content */}
-        <div className="mb-4">
+        <div className="form-group form-group--loose">
           <textarea
             value={content}
             onChange={handleContentChange}
             placeholder={`What's on your mind? Use #hashtags to tag your post.`}
             rows={6}
             maxLength={MAX}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm
-                       focus:outline-none focus:ring-2 focus:ring-blue-300 transition
-                       resize-none"
+            className="form-textarea"
           />
-          <div className={`text-right text-xs mt-1
-            ${charCount > MAX * 0.9 ? 'text-red-500' : 'text-gray-400'}`}>
+          <div className={`character-count ${charCount > MAX * 0.9 ? 'character-count--danger' : ''}`.trim()}>
             {charCount} / {MAX}
           </div>
         </div>
 
         {/* Visibility */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="form-group form-group--loose">
+          <label className="form-label">
             Who can see this?
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="visibility-card-grid">
             {VISIBILITIES.map(v => (
               <button
                 key={v.value}
                 onClick={() => setVisibility(v.value)}
-                className={`p-3 rounded-xl border text-left transition
-                  ${visibility === v.value
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'}`}
+                className={`visibility-card ${visibility === v.value ? 'visibility-card--active' : ''}`.trim()}
               >
-                <div className="text-xl mb-1">{v.icon}</div>
-                <div className="text-sm font-medium text-gray-800">{v.label}</div>
-                <div className="text-xs text-gray-400">{v.desc}</div>
+                <div className="visibility-card__icon">{v.icon}</div>
+                <div className="visibility-card__label">{v.label}</div>
+                <div className="visibility-card__description">{v.desc}</div>
               </button>
             ))}
           </div>
@@ -89,12 +83,12 @@ export default function CreatePost() {
 
         {/* Hashtag hints */}
         {(content.match(/#\w+/g) || []).length > 0 && (
-          <div className="mb-4 flex flex-wrap gap-1">
-            <span className="text-xs text-gray-500 mr-1">Hashtags:</span>
+          <div className="hashtag-hints">
+            <span className="hashtag-hints__label">Hashtags:</span>
             {(content.match(/#[\w]+/g) || []).map(tag => (
               <span
                 key={tag}
-                className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full"
+                className="hashtag-pill"
               >
                 {tag}
               </span>
@@ -103,20 +97,17 @@ export default function CreatePost() {
         )}
 
         {/* Actions */}
-        <div className="flex gap-3 justify-end">
+        <div className="form-actions">
           <button
             onClick={() => navigate('/feed')}
-            className="px-5 py-2 border border-gray-200 rounded-xl text-sm
-                       text-gray-600 hover:bg-gray-50 transition"
+            className="secondary-button"
           >
             Cancel
           </button>
           <button
             onClick={() => mutation.mutate()}
             disabled={!content.trim() || mutation.isPending}
-            className="px-6 py-2 bg-blue-600 text-white rounded-xl text-sm
-                       font-medium hover:bg-blue-700 transition
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+            className="primary-button"
           >
             {mutation.isPending ? 'Publishing…' : 'Publish Post'}
           </button>

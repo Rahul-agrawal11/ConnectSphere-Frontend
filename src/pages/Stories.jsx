@@ -67,48 +67,44 @@ export default function Stories() {
   };
 
   return (
-    <div className="max-w-xl mx-auto">
-      <h1 className="text-xl font-semibold text-gray-800 mb-4">Stories</h1>
+    <div className="page-container page-container--compact">
+      <h1 className="page-title">Stories</h1>
 
       {/* Create Story */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5 shadow-sm">
-        <h3 className="font-medium text-gray-700 mb-3">Share a Story</h3>
+      <div className="story-upload-card">
+        <h3 className="story-upload-card__title">Share a Story</h3>
 
         {preview && (
-          <div className="mb-3 relative">
+          <div className="story-preview">
             {file?.type.startsWith('video') ? (
               <video
                 src={preview}
-                className="w-full max-h-48 rounded-xl object-cover"
+                className="story-preview__media"
               />
             ) : (
               <img
                 src={preview}
                 alt=""
-                className="w-full max-h-48 rounded-xl object-cover"
+                className="story-preview__media"
               />
             )}
             <button
               onClick={() => { setFile(null); setPreview(null); }}
-              className="absolute top-2 right-2 bg-black bg-opacity-50 text-white
-                         rounded-full w-6 h-6 flex items-center justify-center text-xs"
+              className="story-preview__remove"
             >
               ✕
             </button>
           </div>
         )}
 
-        <div className="space-y-3">
-          <label className="block">
-            <span className="sr-only">Choose photo or video</span>
+        <div className="form-stack">
+          <label className="file-input-label">
+            <span className="visually-hidden">Choose photo or video</span>
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp,video/mp4"
               onChange={handleFileChange}
-              className="block w-full text-sm text-gray-500 file:mr-3
-                         file:py-2 file:px-4 file:rounded-lg file:border-0
-                         file:text-sm file:font-medium file:bg-blue-50
-                         file:text-blue-700 hover:file:bg-blue-100 transition"
+              className="file-input"
             />
           </label>
 
@@ -118,16 +114,13 @@ export default function Stories() {
             onChange={e => setCaption(e.target.value)}
             placeholder="Add a caption…"
             maxLength={500}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm
-                       focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+            className="form-input"
           />
 
           <button
             onClick={() => uploadMutation.mutate()}
             disabled={!file || uploadMutation.isPending}
-            className="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm
-                       font-medium hover:bg-blue-700 transition
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+            className="primary-button primary-button--full"
           >
             {uploadMutation.isPending ? 'Uploading…' : 'Share Story'}
           </button>
@@ -139,39 +132,38 @@ export default function Stories() {
 
       {/* My Active Stories */}
       {myStories.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mt-4">
-          <h3 className="font-medium text-gray-700 mb-3">Your Active Stories</h3>
-          <div className="space-y-2">
+        <div className="my-stories-card">
+          <h3 className="my-stories-card__title">Your Active Stories</h3>
+          <div className="my-stories-list">
             {isLoading ? <Spinner size="sm" /> : myStories.map(story => (
               <div
                 key={story.id}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50"
+                className="my-story-item"
               >
                 {story.mediaType === 'VIDEO' ? (
                   <video
                     src={story.mediaUrl}
-                    className="w-12 h-12 rounded-lg object-cover"
+                    className="my-story-item__thumb"
                   />
                 ) : (
                   <img
                     src={story.mediaUrl}
                     alt=""
-                    className="w-12 h-12 rounded-lg object-cover"
+                    className="my-story-item__thumb"
                   />
                 )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700 truncate">
+                <div className="my-story-item__body">
+                  <p className="my-story-item__caption">
                     {story.caption || 'No caption'}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="my-story-item__meta">
                     👁 {story.viewsCount} · {Math.ceil((story.secondsUntilExpiry || 0) / 3600)}h left
                   </p>
                 </div>
                 <button
                   onClick={() => deleteMutation.mutate(story.id)}
                   disabled={deleteMutation.isPending}
-                  className="text-xs text-red-400 hover:text-red-600 transition px-2
-                             disabled:opacity-50"
+                  className="text-action-button text-action-button--danger"
                 >
                   Delete
                 </button>

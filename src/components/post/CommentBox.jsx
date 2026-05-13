@@ -24,10 +24,10 @@ export default function CommentBox({ postId }) {
 
   if (!isAuthenticated) {
     return (
-      <p className="text-sm text-gray-500 text-center py-3">
+      <p className="comment-login-prompt">
         <button
           onClick={() => navigate('/login')}
-          className="text-blue-600 hover:underline"
+          className="link-button"
         >
           Log in
         </button>{' '}
@@ -37,21 +37,19 @@ export default function CommentBox({ postId }) {
   }
 
   return (
-    <div className="flex gap-3">
+    <div className="comment-form">
       <Avatar
         src={user?.profilePicUrl}
         name={user?.username}
         size={9}
-        className="flex-shrink-0 mt-0.5"
+        className="comment-form__avatar"
       />
-      <div className="flex-1 flex gap-2">
+      <div className="comment-form__body">
         <input
           value={text}
           onChange={e => setText(e.target.value)}
           placeholder="Write a comment…"
-          className="flex-1 px-4 py-2 bg-gray-100 rounded-full text-sm
-                     border-transparent focus:outline-none focus:ring-2
-                     focus:ring-blue-300 focus:bg-white transition"
+          className="comment-form__input"
           onKeyDown={e => {
             if (e.key === 'Enter' && text.trim()) {
               e.preventDefault();
@@ -62,9 +60,7 @@ export default function CommentBox({ postId }) {
         <button
           onClick={() => { if (text.trim()) mutation.mutate(); }}
           disabled={!text.trim() || mutation.isPending}
-          className="px-4 py-2 bg-blue-600 text-white text-sm rounded-full
-                     hover:bg-blue-700 transition disabled:opacity-50
-                     disabled:cursor-not-allowed font-medium"
+          className="primary-button primary-button--pill"
         >
           Post
         </button>

@@ -1,27 +1,31 @@
 import apiClient from './apiClient';
 
-export const notificationApi = {
-  getNotifications: (page = 0, size = 20) =>
-    apiClient.get(`/api/v1/notifications?page=${page}&size=${size}`),
+const NOTIF_BASE = '/api/v1/notifications';
 
-  getUnread: (page = 0, size = 20) =>
-    apiClient.get(`/api/v1/notifications/unread?page=${page}&size=${size}`),
+// GET /api/v1/notifications?page=0&size=20
+export const getNotifications = (page = 0, size = 20) =>
+  apiClient.get(NOTIF_BASE, { params: { page, size } });
 
-  getUnreadCount: () =>
-    apiClient.get('/api/v1/notifications/unread/count'),
+// GET /api/v1/notifications/unread?page=0&size=20
+export const getUnreadNotifications = (page = 0, size = 20) =>
+  apiClient.get(`${NOTIF_BASE}/unread`, { params: { page, size } });
 
-  markAsRead: (notificationId) =>
-    apiClient.patch(`/api/v1/notifications/${notificationId}/read`),
+// GET /api/v1/notifications/unread/count
+export const getUnreadCount = () =>
+  apiClient.get(`${NOTIF_BASE}/unread/count`);
 
-  markAllAsRead: () =>
-    apiClient.patch('/api/v1/notifications/read-all'),
+// PATCH /api/v1/notifications/:notificationId/read
+export const markAsRead = (notificationId) =>
+  apiClient.patch(`${NOTIF_BASE}/${notificationId}/read`);
 
-  deleteNotification: (notificationId) =>
-    apiClient.delete(`/api/v1/notifications/${notificationId}`),
+// PATCH /api/v1/notifications/read-all
+export const markAllAsRead = () =>
+  apiClient.patch(`${NOTIF_BASE}/read-all`);
 
-  deleteAll: () =>
-    apiClient.delete('/api/v1/notifications/all'),
+// DELETE /api/v1/notifications/:notificationId
+export const deleteNotification = (notificationId) =>
+  apiClient.delete(`${NOTIF_BASE}/${notificationId}`);
 
-  sendBulk: (data) =>
-    apiClient.post('/api/v1/notifications/bulk', data),
-};
+// DELETE /api/v1/notifications/all
+export const deleteAllNotifications = () =>
+  apiClient.delete(`${NOTIF_BASE}/all`);

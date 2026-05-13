@@ -1,0 +1,49 @@
+.otp-grid {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.otp-input {
+  width: 52px;
+  height: 60px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border: 2px solid var(--cs-border);
+  border-radius: var(--radius-md);
+  background: var(--cs-surface);
+  color: var(--cs-text-primary);
+  outline: none;
+  transition: all var(--transition-fast);
+  font-family: 'DM Serif Display', serif;
+}
+
+.otp-input:focus {
+  border-color: var(--cs-primary);
+  box-shadow: 0 0 0 3px rgba(79,110,247,0.15);
+}
+
+.otp-input--filled {
+  border-color: var(--cs-primary);
+  background: var(--cs-primary-light);
+}
+
+.otp-footer {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 400px) {
+  .otp-input {
+    width: 42px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+
+  .otp-grid {
+    gap: 7px;
+  }
+}

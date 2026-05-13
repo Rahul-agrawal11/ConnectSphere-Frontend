@@ -4,9 +4,9 @@ import Navbar from './Navbar';
 
 export default function Layout() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="app-shell">
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 pt-20 pb-12">
+      <main className="app-main">
         <Outlet />
       </main>
     </div>

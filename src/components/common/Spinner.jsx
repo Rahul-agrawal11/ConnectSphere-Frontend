@@ -1,13 +1,19 @@
-import React from 'react';
+import './Spinner.css';
 
-export default function Spinner({ size = 'md', center = false }) {
-  const sizes = { sm: 'w-4 h-4', md: 'w-8 h-8', lg: 'w-12 h-12' };
-  const el = (
-    <div
-      className={`${sizes[size]} border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin`}
-    />
-  );
-  return center
-    ? <div className="flex justify-center py-12">{el}</div>
-    : el;
-}
+const Spinner = ({ size = 24, color }) => (
+  <span
+    className="spinner"
+    style={{
+      width:  size,
+      height: size,
+      borderColor: color
+        ? `${color}30`
+        : 'var(--cs-primary-light)',
+      borderTopColor: color || 'var(--cs-primary)',
+    }}
+    role="status"
+    aria-label="Loading"
+  />
+);
+
+export default Spinner;

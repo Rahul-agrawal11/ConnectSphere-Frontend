@@ -1,276 +1,329 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import TimeAgo from 'react-timeago';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { postApi } from '../../api/postApi';
-import { likeApi } from '../../api/likeApi';
-import { authApi } from '../../api/authApi';
-import { useAuth } from '../../context/AuthContext';
+import { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  MessageCircle, MoreHorizontal, Trash2, Edit3, Globe, Lock, Users,
+  Share2,
+} from 'lucide-react';
+import useAuth from '../../hooks/useAuth';
 import Avatar from '../common/Avatar';
-import EmojiBar from './EmojiBar';
-import toast from 'react-hot-toast';
+import ReactionBar from './ReactionBar';
+import CommentSection from '../comment/CommentSection';
+import EditPostModal from './EditPostModal';
+import {
+  getReactionSummary, react, unreact, getMyReaction, changeReaction,
+} from '../../api/likeApi';
+import { deletePost } from '../../api/postApi';
+import { getProfileById } from '../../api/authApi';
+import { useToast } from '../common/Toast';
+import './PostCard.css';
 
-// FIX: Hoist EMOJI_MAP BEFORE the component so it is accessible inside
-// PostCard AND exported for EmojiBar without forward-reference issues
-export const EMOJI_MAP = {
-  LIKE:  '👍',
-  LOVE:  '❤️',
-  HAHA:  '😂',
-  WOW:   '😮',
-  SAD:   '😢',
-  ANGRY: '😡',
+const VISIBILITY_ICONS = {
+  PUBLIC:           <Globe    size={12} />,
+  FOLLOWERS_ONLY:   <Users    size={12} />,
+  PRIVATE:          <Lock     size={12} />,
 };
 
-const VISIBILITY_ICON = {
-  PUBLIC:          '🌍',
-  FOLLOWERS_ONLY:  '👥',
-  PRIVATE:         '🔒',
+const timeAgo = (dateStr) => {
+  if (!dateStr) return '';
+  const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (seconds < 60)    return 'just now';
+  if (seconds < 3600)  return `${Math.floor(seconds / 60)}m`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
+  return `${Math.floor(seconds / 86400)}d`;
 };
 
-export default function PostCard({ post, onDelete }) {
-  const { user, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-  const qc = useQueryClient();
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+const PostCard = ({ post, onDeleted, onUpdated }) => {
+  const { user }     = useAuth();
+  const { addToast } = useToast();
 
-  const isOwner = user?.userId === post.authorId;
+  const [author, setAuthor]             = useState(null);
+  const [summary, setSummary]           = useState({});
+  const [totalCount, setTotalCount]     = useState(post.likesCount || 0);
+  const [userReaction, setUserReaction] = useState(null);
+  const [showComments, setShowComments] = useState(false);
+  const [menuOpen, setMenuOpen]         = useState(false);
+  const [editOpen, setEditOpen]         = useState(false);
+  const [deleting, setDeleting]         = useState(false);
 
-  // ── Fetch author profile ─────────────────────────────────────────────────
-  // Backend: GET /api/v1/auth/profile/{userId} → ApiResponse<UserProfileResponse>
-  const { data: authorData } = useQuery({
-    queryKey: ['profile', post.authorId],
-    queryFn: () => authApi.getProfileById(post.authorId),
-    staleTime: 1000 * 60 * 5,
-  });
-  const author = authorData?.data?.data;
+  const isOwner = user && user.id === post.authorId;
 
-  // ── Fetch reaction summary ───────────────────────────────────────────────
-  // Backend: GET /api/v1/likes/summary?targetId=&targetType=POST
-  // Returns: ApiResponse<ReactionSummaryResponse>
-  // ReactionSummaryResponse: { targetId, targetType, totalCount, reactions: Map<String,Long> }
-  const { data: reactionData, refetch: refetchReactions } = useQuery({
-    queryKey: ['reactions', post.id, 'POST'],
-    queryFn: () => likeApi.getReactionSummary(post.id, 'POST'),
-    staleTime: 1000 * 30,
-  });
-  const reactionSummary = reactionData?.data?.data;
+  useEffect(() => {
+    loadAuthor();
+    loadReactions();
+    if (user) loadMyReaction();
+  }, [post.id, user]);
 
-  // ── Fetch user's own reaction ────────────────────────────────────────────
-  // Backend: GET /api/v1/likes/my-reaction?targetId=&targetType=POST
-  // Returns: ApiResponse<LikeResponse>
-  // LikeResponse: { id, userId, targetId, targetType, reactionType, createdAt, updatedAt }
-  const { data: myReactionData, refetch: refetchMyReaction } = useQuery({
-    queryKey: ['myReaction', post.id, 'POST'],
-    queryFn: () => likeApi.getUserReaction(post.id, 'POST'),
-    enabled: isAuthenticated,
-    retry: false, // 404 is expected when user hasn't reacted
-  });
-  const myReaction = myReactionData?.data?.data;
+  const loadAuthor = async () => {
+    try {
+      const res = await getProfileById(post.authorId);
+      setAuthor(res.data?.data || null);
+    } catch { /* author display is non-critical */ }
+  };
 
-  // ── React / Unreact / Change reaction ───────────────────────────────────
-  const reactMutation = useMutation({
-    mutationFn: (reactionType) => {
-      if (myReaction) {
-        // Already reacted
-        if (myReaction.reactionType === reactionType) {
-          // Same reaction → unreact (toggle off)
-          // Backend: DELETE /api/v1/likes?targetId=&targetType=POST
-          return likeApi.unreact(post.id, 'POST');
-        }
-        // Different reaction → change type
-        // Backend: PUT /api/v1/likes/change?targetId=&targetType=POST&newReactionType=
-        return likeApi.changeReaction(post.id, 'POST', reactionType);
+  const loadReactions = async () => {
+    try {
+      const res = await getReactionSummary(post.id, 'POST');
+      const s   = res.data?.data;
+      if (s) {
+        setSummary(s.reactions || {});
+        setTotalCount(s.totalCount || 0);
       }
-      // New reaction
-      // Backend: POST /api/v1/likes  body: { targetId, targetType, reactionType }
-      return likeApi.react({ targetId: post.id, targetType: 'POST', reactionType });
-    },
-    onSuccess: () => {
-      refetchReactions();
-      refetchMyReaction();
-    },
-    onError: () => toast.error('Could not react'),
-  });
+    } catch { /* silent — reaction bar shows 0 */ }
+  };
 
-  // ── Delete post ──────────────────────────────────────────────────────────
-  const deleteMutation = useMutation({
-    mutationFn: () => postApi.deletePost(post.id),
-    onSuccess: () => {
-      toast.success('Post deleted');
-      onDelete?.(post.id);
-    },
-    onError: () => toast.error('Delete failed'),
-  });
+  /**
+   * Load the current user's reaction on this post.
+   *
+   * FIX: Backend now returns 200 with data=null when user has not reacted.
+   * No more 404 noise in the console — just clean null handling.
+   */
+  const loadMyReaction = async () => {
+    try {
+      const res = await getMyReaction(post.id, 'POST');
+      setUserReaction(res.data?.data?.reactionType || null);
+    } catch { /* if auth fails, user reaction stays null */ }
+  };
+
+  /**
+   * Handle reaction selection from the ReactionBar picker.
+   *
+   * Cases:
+   *   1. No existing reaction   → react()        → totalCount + 1
+   *   2. Same reaction selected → unreact()       → totalCount - 1 (toggle off)
+   *   3. Different reaction     → changeReaction() → totalCount unchanged, summary updated
+   */
+  const handleReact = useCallback(async (reactionType) => {
+    if (!user) {
+      addToast('Please log in to react', 'info');
+      return;
+    }
+
+    try {
+      if (!userReaction) {
+        // Case 1: Fresh reaction
+        await react({ targetId: post.id, targetType: 'POST', reactionType });
+
+        // Optimistic update
+        setTotalCount((c) => c + 1);
+        setSummary((prev) => ({
+          ...prev,
+          [reactionType]: (prev[reactionType] || 0) + 1,
+        }));
+        setUserReaction(reactionType);
+
+      } else if (userReaction === reactionType) {
+        // Case 2: Same reaction clicked → toggle off (unreact)
+        await unreact(post.id, 'POST');
+
+        // Optimistic update
+        setTotalCount((c) => Math.max(c - 1, 0));
+        setSummary((prev) => ({
+          ...prev,
+          [reactionType]: Math.max((prev[reactionType] || 1) - 1, 0),
+        }));
+        setUserReaction(null);
+
+      } else {
+        // Case 3: Change to a different reaction type
+        await changeReaction(post.id, 'POST', reactionType);
+
+        // Optimistic update — swap old type for new type, total count unchanged
+        setSummary((prev) => {
+          const next = { ...prev };
+          next[userReaction] = Math.max((next[userReaction] || 1) - 1, 0);
+          next[reactionType] = (next[reactionType] || 0) + 1;
+          return next;
+        });
+        setUserReaction(reactionType);
+        // totalCount unchanged
+      }
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to react', 'error');
+      // Reload actual server state to fix any optimistic update drift
+      loadReactions();
+      loadMyReaction();
+    }
+  }, [user, userReaction, post.id]);
+
+  const handleUnreact = useCallback(async () => {
+    if (!user || !userReaction) return;
+    try {
+      await unreact(post.id, 'POST');
+
+      // Optimistic update
+      setSummary((prev) => ({
+        ...prev,
+        [userReaction]: Math.max((prev[userReaction] || 1) - 1, 0),
+      }));
+      setTotalCount((c) => Math.max(c - 1, 0));
+      setUserReaction(null);
+    } catch (err) {
+      addToast('Failed to remove reaction', 'error');
+      loadReactions();
+      loadMyReaction();
+    }
+  }, [user, userReaction, post.id]);
+
+  const handleDelete = async () => {
+    if (!window.confirm('Delete this post?')) return;
+    setDeleting(true);
+    try {
+      await deletePost(post.id);
+      addToast('Post deleted', 'success');
+      onDeleted?.(post.id);
+    } catch (err) {
+      addToast(err.response?.data?.message || 'Failed to delete', 'error');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const renderContent = (content = '') => {
+    // Render hashtags and mentions as styled/linked text
+    return content.split(/(\s)/).map((word, i) => {
+      if (word.startsWith('#')) {
+        return (
+          <Link key={i} to={`/search?tag=${word.slice(1)}`} className="post-card__hashtag">
+            {word}
+          </Link>
+        );
+      }
+      if (word.startsWith('@')) {
+        return <span key={i} className="post-card__mention">{word}</span>;
+      }
+      return word;
+    });
+  };
 
   return (
-    <article className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <Link
-          to={`/profile/${post.authorId}`}
-          className="flex items-center gap-2 group"
-        >
+    <article className="post-card card animate-fade-in">
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      <div className="post-card__header">
+        <Link to={`/profile/${post.authorId}`} className="post-card__author-link">
           <Avatar
             src={author?.profilePicUrl}
-            name={author?.username || `User ${post.authorId}`}
-            size={9}
+            username={author?.username || String(post.authorId)}
+            size={42}
           />
-          <div>
-            <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition">
+          <div className="post-card__author-info">
+            <span className="post-card__author-name">
               {author?.fullName || author?.username || `User #${post.authorId}`}
-            </p>
-            <div className="flex items-center gap-1 text-xs text-gray-400">
-              <span>@{author?.username || post.authorId}</span>
-              <span>·</span>
-              <TimeAgo date={post.createdAt} />
-              <span>·</span>
-              <span title={post.visibility}>
-                {VISIBILITY_ICON[post.visibility] || '🌍'}
+            </span>
+            <span className="post-card__meta">
+              <span className="post-card__time">{timeAgo(post.createdAt)}</span>
+              <span className="post-card__visibility">
+                {VISIBILITY_ICONS[post.visibility] || <Globe size={12} />}
+                {post.visibility?.toLowerCase().replace('_', '-')}
               </span>
-            </div>
+            </span>
           </div>
         </Link>
 
-        {/* Owner actions */}
         {isOwner && (
-          <div className="flex gap-1">
+          <div className="post-card__menu-wrap">
             <button
-              onClick={() => navigate(`/posts/${post.id}`)}
-              className="p-1.5 text-gray-400 hover:text-blue-500
-                         hover:bg-blue-50 rounded-lg text-xs transition"
+              className="post-card__menu-btn"
+              onClick={() => setMenuOpen((p) => !p)}
+              aria-label="Post options"
             >
-              Edit
+              <MoreHorizontal size={18} />
             </button>
-            <button
-              onClick={() => {
-                if (window.confirm('Delete this post?')) {
-                  deleteMutation.mutate();
-                }
-              }}
-              className="p-1.5 text-gray-400 hover:text-red-500
-                         hover:bg-red-50 rounded-lg text-xs transition"
-              disabled={deleteMutation.isPending}
-            >
-              Delete
-            </button>
+            {menuOpen && (
+              <div className="post-card__menu animate-scale-in">
+                <button
+                  className="post-card__menu-item"
+                  onClick={() => { setEditOpen(true); setMenuOpen(false); }}
+                >
+                  <Edit3 size={14} /> Edit
+                </button>
+                <button
+                  className="post-card__menu-item post-card__menu-item--danger"
+                  onClick={() => { handleDelete(); setMenuOpen(false); }}
+                  disabled={deleting}
+                >
+                  <Trash2 size={14} /> {deleting ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Content */}
-      <Link to={`/posts/${post.id}`}>
-        <p className="text-gray-800 text-sm leading-relaxed mb-3 whitespace-pre-wrap
-                       hover:text-gray-900 transition line-clamp-3">
-          {post.content}
-        </p>
-      </Link>
+      {/* ── Content ────────────────────────────────────────────────────── */}
+      <div className="post-card__content">
+        <p className="post-card__text">{renderContent(post.content)}</p>
 
-      {/* Media */}
-      {post.mediaUrls?.length > 0 && (
-        <div className={`grid gap-1 mb-3 ${post.mediaUrls.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-          {post.mediaUrls.slice(0, 4).map((url, i) => (
-            <img
-              key={i}
-              src={url}
-              alt=""
-              className="w-full rounded-lg object-cover max-h-64"
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Hashtags */}
-      {post.content && /#\w+/.test(post.content) && (
-        <div className="flex flex-wrap gap-1 mb-3">
-          {(post.content.match(/#[\w]+/g) || []).map(tag => (
-            <Link
-              key={tag}
-              to={`/hashtags/${tag.slice(1)}`}
-              className="text-xs text-blue-500 hover:text-blue-700
-                         bg-blue-50 px-2 py-0.5 rounded-full transition"
-            >
-              {tag}
-            </Link>
-          ))}
-        </div>
-      )}
-
-      {/* Reaction Summary — shows emoji counts e.g. 👍 10 ❤️ 5 */}
-      {reactionSummary?.totalCount > 0 && (
-        <div className="flex gap-2 mb-2 text-xs text-gray-500">
-          {Object.entries(reactionSummary.reactions || {}).map(([type, count]) => (
-            <span key={type}>
-              {EMOJI_MAP[type]} {count}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Stats Row */}
-      <div className="flex items-center justify-between text-xs text-gray-400
-                       border-t border-gray-100 pt-2 mt-2">
-        <span>{post.likesCount ?? 0} reactions</span>
-        <Link to={`/posts/${post.id}`} className="hover:text-blue-500 transition">
-          {post.commentsCount ?? 0} comments
-        </Link>
-        <span>{post.sharesCount ?? 0} shares</span>
+        {/* Media grid */}
+        {post.mediaUrls?.length > 0 && (
+          <div className={`post-card__media post-card__media--${Math.min(post.mediaUrls.length, 4)}`}>
+            {post.mediaUrls.slice(0, 4).map((url, i) => {
+              const isVideo = /\.(mp4|webm|ogg)$/i.test(url);
+              return isVideo ? (
+                <video key={i} src={url} controls className="post-card__media-item" />
+              ) : (
+                <img key={i} src={url} alt="" className="post-card__media-item" loading="lazy" />
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Action Bar */}
-      <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-100">
-        {/* Reaction Button + Emoji Picker */}
-        <div className="relative">
-          <button
-            onClick={() => {
-              if (!isAuthenticated) { navigate('/login'); return; }
-              setShowEmojiPicker(v => !v);
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                        text-sm transition font-medium
-                        ${myReaction
-                          ? 'text-blue-600 bg-blue-50'
-                          : 'text-gray-600 hover:bg-gray-100'}`}
-          >
-            <span>{myReaction ? EMOJI_MAP[myReaction.reactionType] : '👍'}</span>
-            <span>{myReaction ? myReaction.reactionType : 'Like'}</span>
-          </button>
-
-          {showEmojiPicker && (
-            <EmojiBar
-              onSelect={(type) => {
-                reactMutation.mutate(type);
-                setShowEmojiPicker(false);
-              }}
-              onClose={() => setShowEmojiPicker(false)}
-            />
+      {/* ── Stats ──────────────────────────────────────────────────────── */}
+      {(totalCount > 0 || post.commentsCount > 0) && (
+        <div className="post-card__stats">
+          {totalCount > 0 && (
+            <span className="post-card__stat">{totalCount} reactions</span>
+          )}
+          {post.commentsCount > 0 && (
+            <span className="post-card__stat">{post.commentsCount} comments</span>
           )}
         </div>
+      )}
 
-        {/* Comment Button */}
-        <Link
-          to={`/posts/${post.id}#comments`}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                     text-sm text-gray-600 hover:bg-gray-100 transition"
-        >
-          <span>💬</span>
-          <span>Comment</span>
-        </Link>
+      <hr className="divider" />
 
-        {/* Share — copy link to clipboard */}
+      {/* ── Actions ────────────────────────────────────────────────────── */}
+      <div className="post-card__actions">
+        <ReactionBar
+          targetId={post.id}
+          targetType="POST"
+          summary={summary}
+          totalCount={totalCount}
+          userReaction={userReaction}
+          onReact={handleReact}
+          onUnreact={handleUnreact}
+        />
         <button
-          onClick={() => {
-            navigator.clipboard.writeText(
-              `${window.location.origin}/posts/${post.id}`
-            );
-            toast.success('Link copied!');
-          }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                     text-sm text-gray-600 hover:bg-gray-100 transition ml-auto"
+          className={`post-card__action-btn ${showComments ? 'post-card__action-btn--active' : ''}`}
+          onClick={() => setShowComments((p) => !p)}
         >
-          <span>🔗</span>
-          <span className="hidden sm:block">Share</span>
+          <MessageCircle size={16} />
+          Comment
+        </button>
+        <button className="post-card__action-btn">
+          <Share2 size={16} />
+          Share
         </button>
       </div>
+
+      {/* ── Comments ───────────────────────────────────────────────────── */}
+      {showComments && (
+        <CommentSection postId={post.id} />
+      )}
+
+      {/* ── Edit modal ─────────────────────────────────────────────────── */}
+      {editOpen && (
+        <EditPostModal
+          post={post}
+          onClose={() => setEditOpen(false)}
+          onUpdated={(updated) => {
+            onUpdated?.(updated);
+            setEditOpen(false);
+          }}
+        />
+      )}
     </article>
   );
-}
+};
+
+export default PostCard;

@@ -1,53 +1,49 @@
 import apiClient from './apiClient';
 
-export const postApi = {
-  // ── Create ────────────────────────────────────────────────────────────────
-  // Backend DTO: { content, mediaUrls?, visibility? }
-  createPost: (data) =>
-    apiClient.post('/api/v1/posts', data),
+const POSTS_BASE = '/api/v1/posts';
 
-  // ── Read ──────────────────────────────────────────────────────────────────
-  getPostById: (postId) =>
-    apiClient.get(`/api/v1/posts/${postId}`),
+// POST /api/v1/posts
+export const createPost = (data) =>
+  apiClient.post(POSTS_BASE, data);
+// data: { content, mediaUrls?, visibility? }
 
-  getPublicFeed: (page = 0, size = 10) =>
-    apiClient.get('/api/v1/posts/public', { params: { page, size } }),
+// GET /api/v1/posts/:postId
+export const getPostById = (postId) =>
+  apiClient.get(`${POSTS_BASE}/${postId}`);
 
-  // Backend: GET /api/v1/posts/feed?followedUserIds=1&followedUserIds=2&...
-  // Spring's @RequestParam List<Long> requires repeated params, not CSV
-  getFeed: (followedUserIds = [], page = 0, size = 10) => {
-    const params = new URLSearchParams();
-    followedUserIds.forEach(id => params.append('followedUserIds', id));
-    params.append('page', page);
-    params.append('size', size);
-    return apiClient.get(`/api/v1/posts/feed?${params.toString()}`);
-  },
+// GET /api/v1/posts/public?page=0&size=10
+export const getPublicFeed = (page = 0, size = 10) =>
+  apiClient.get(`${POSTS_BASE}/public`, { params: { page, size } });
 
-  getPostsByUser: (authorId, page = 0, size = 10) =>
-    apiClient.get(`/api/v1/posts/user/${authorId}`, { params: { page, size } }),
+// GET /api/v1/posts/feed?followedUserIds=1,2,3&page=0&size=10
+export const getPersonalFeed = (followedUserIds, page = 0, size = 10) =>
+  apiClient.get(`${POSTS_BASE}/feed`, {
+    params: { followedUserIds: followedUserIds.join(','), page, size },
+  });
 
-  searchPosts: (keyword, page = 0, size = 10) =>
-    apiClient.get('/api/v1/posts/search', { params: { keyword, page, size } }),
+// GET /api/v1/posts/user/:authorId?page=0&size=10
+export const getPostsByUser = (authorId, page = 0, size = 10) =>
+  apiClient.get(`${POSTS_BASE}/user/${authorId}`, { params: { page, size } });
 
-  getPostCount: (authorId) =>
-    apiClient.get(`/api/v1/posts/count/${authorId}`),
+// GET /api/v1/posts/search?keyword=...&page=0&size=10
+export const searchPosts = (keyword, page = 0, size = 10) =>
+  apiClient.get(`${POSTS_BASE}/search`, { params: { keyword, page, size } });
 
-  // ── Update ────────────────────────────────────────────────────────────────
-  // Backend DTO: { content?, mediaUrls?, visibility? }
-  updatePost: (postId, data) =>
-    apiClient.put(`/api/v1/posts/${postId}`, data),
+// GET /api/v1/posts/count/:authorId
+export const getPostCount = (authorId) =>
+  apiClient.get(`${POSTS_BASE}/count/${authorId}`);
 
-  // Backend: PATCH /api/v1/posts/{postId}/visibility?visibility=PUBLIC
-  changeVisibility: (postId, visibility) =>
-    apiClient.patch(`/api/v1/posts/${postId}/visibility`, null, {
-      params: { visibility },
-    }),
+// PUT /api/v1/posts/:postId
+export const updatePost = (postId, data) =>
+  apiClient.put(`${POSTS_BASE}/${postId}`, data);
+// data: { content?, mediaUrls?, visibility? }
 
-  // ── Delete ────────────────────────────────────────────────────────────────
-  deletePost: (postId) =>
-    apiClient.delete(`/api/v1/posts/${postId}`),
+// PATCH /api/v1/posts/:postId/visibility?visibility=PUBLIC
+export const changeVisibility = (postId, visibility) =>
+  apiClient.patch(`${POSTS_BASE}/${postId}/visibility`, null, {
+    params: { visibility },
+  });
 
-  // Backend: DELETE /api/v1/posts/admin/{postId}  (checks X-User-Role header via gateway)
-  adminDeletePost: (postId) =>
-    apiClient.delete(`/api/v1/posts/admin/${postId}`),
-};
+// DELETE /api/v1/posts/:postId
+export const deletePost = (postId) =>
+  apiClient.delete(`${POSTS_BASE}/${postId}`);

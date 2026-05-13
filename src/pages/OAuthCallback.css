@@ -1,0 +1,57 @@
+.oauth-callback {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cs-bg);
+  padding: 24px;
+}
+
+.oauth-callback__card {
+  background: var(--cs-surface);
+  border: 1px solid var(--cs-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 48px 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 420px;
+  width: 100%;
+  animation: fadeInScale 0.3s ease;
+}
+
+.oauth-callback__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.oauth-callback__icon--error {
+  background: #FFF0F0;
+  color: var(--cs-accent);
+}
+
+.oauth-callback__title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.4rem;
+  color: var(--cs-text-primary);
+}
+
+.oauth-callback__msg {
+  font-size: 0.9rem;
+  color: var(--cs-text-secondary);
+  line-height: 1.5;
+}
+
+.oauth-callback__redirect {
+  font-size: 0.8rem;
+  color: var(--cs-text-muted);
+}

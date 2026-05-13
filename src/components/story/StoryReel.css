@@ -1,0 +1,185 @@
+.story-reel {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  min-height: 112px;
+  padding: 16px 18px;
+  margin-bottom: 4px;
+  background: var(--cs-surface);
+  border: 1px solid var(--cs-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.story-reel::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Story Bubble ──────────────────────────────────────────────────────── */
+
+.story-bubble {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  min-width: 76px;
+  max-width: 76px;
+  cursor: pointer;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  /* Smooth transition for hover transform */
+  transition: transform var(--transition-base);
+  outline: none;
+  border-radius: var(--radius-md);
+}
+
+/* Keyboard focus visible — accessibility */
+.story-bubble:focus-visible {
+  outline: 2px solid var(--cs-primary);
+  outline-offset: 4px;
+}
+
+.story-bubble--add {
+  cursor: default;
+}
+
+/* ── Add Story Label ───────────────────────────────────────────────────── */
+
+.story-bubble__add-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* ── Ring ──────────────────────────────────────────────────────────────── */
+
+.story-bubble__ring {
+  position: relative;
+  width: 66px;
+  height: 66px;
+  padding: 3px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-base);
+}
+
+.story-bubble__ring--active {
+  background: linear-gradient(135deg, #ff6b6b, #ffd166, #4f6ef7);
+}
+
+.story-bubble__ring--add {
+  background: linear-gradient(135deg, var(--cs-primary), var(--cs-secondary));
+}
+
+.story-bubble__ring > .avatar {
+  width: 58px !important;
+  height: 58px !important;
+  border: 3px solid var(--cs-surface);
+}
+
+/* Hover: lift the ring */
+.story-bubble:hover .story-bubble__ring,
+.story-bubble:focus-visible .story-bubble__ring {
+  transform: translateY(-2px);
+}
+
+/* ── Add Icon Badge ────────────────────────────────────────────────────── */
+
+.story-bubble__add-icon {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--cs-primary);
+  color: #fff;
+  border: 3px solid var(--cs-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  z-index: 5;
+}
+
+/* ── Name Label ────────────────────────────────────────────────────────── */
+
+.story-bubble__name {
+  width: 76px;
+  font-size: 0.74rem;
+  line-height: 1.1;
+  color: var(--cs-text-secondary);
+  font-weight: 600;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Loading Skeleton ──────────────────────────────────────────────────── */
+
+.story-bubble--loading {
+  cursor: default;
+  pointer-events: none;
+}
+
+.story-bubble__ring--skeleton {
+  background: var(--cs-border);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.story-bubble__name--skeleton {
+  background: var(--cs-border);
+  border-radius: var(--radius-sm);
+  height: 10px;
+  width: 50px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  color: transparent;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .story-reel {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 14px 12px;
+    margin-left: -12px;
+    margin-right: -12px;
+  }
+
+  .story-bubble {
+    min-width: 70px;
+    max-width: 70px;
+  }
+
+  .story-bubble__ring {
+    width: 62px;
+    height: 62px;
+  }
+
+  .story-bubble__ring > .avatar {
+    width: 54px !important;
+    height: 54px !important;
+  }
+
+  .story-bubble__name {
+    width: 70px;
+    font-size: 0.7rem;
+  }
+}

@@ -17,14 +17,14 @@ export default function Following() {
   const follows = data?.data?.data?.content || [];
 
   return (
-    <div className="max-w-xl mx-auto">
-      <h1 className="text-xl font-semibold text-gray-800 mb-4">Following</h1>
+    <div className="page-container page-container--compact">
+      <h1 className="page-title">Following</h1>
       {isLoading ? (
         <Spinner center />
       ) : follows.length === 0 ? (
-        <p className="text-center text-gray-400 py-12">Not following anyone yet.</p>
+        <p className="empty-inline empty-inline--spacious">Not following anyone yet.</p>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 shadow-sm">
+        <div className="user-list-card">
           {follows.map(f => (
             <UserRow key={f.id} userId={f.followeeId} />
           ))}
@@ -46,12 +46,12 @@ function UserRow({ userId }) {
   return (
     <Link
       to={`/profile/${userId}`}
-      className="flex items-center gap-3 p-4 hover:bg-gray-50 transition"
+      className="user-list-item"
     >
       <Avatar src={u.profilePicUrl} name={u.username} size={10} />
       <div>
-        <p className="font-medium text-gray-900">{u.fullName || u.username}</p>
-        <p className="text-sm text-gray-500">@{u.username}</p>
+        <p className="user-list-item__name">{u.fullName || u.username}</p>
+        <p className="user-list-item__handle">@{u.username}</p>
       </div>
     </Link>
   );

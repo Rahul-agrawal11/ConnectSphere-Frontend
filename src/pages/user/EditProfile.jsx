@@ -58,20 +58,20 @@ export default function EditProfile() {
   if (isLoading) return <Spinner center />;
 
   return (
-    <div className="max-w-xl mx-auto space-y-4">
+    <div className="page-container page-container--compact page-stack">
       {/* Profile Card */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h2 className="text-lg font-semibold mb-5">Edit Profile</h2>
+      <div className="section-card section-card--spacious">
+        <h2 className="section-card__heading">Edit Profile</h2>
 
         {/* Avatar Preview */}
-        <div className="flex items-center gap-4 mb-5">
+        <div className="profile-edit-avatar-row">
           <Avatar
             src={form.profilePicUrl}
             name={form.username}
             size={16}
           />
-          <div className="flex-1">
-            <label className="block text-xs text-gray-500 mb-1">
+          <div className="profile-edit-avatar-row__field">
+            <label className="form-label form-label--small">
               Profile picture URL
             </label>
             <input
@@ -79,8 +79,7 @@ export default function EditProfile() {
               value={form.profilePicUrl}
               onChange={e => setForm(p => ({ ...p, profilePicUrl: e.target.value }))}
               placeholder="https://example.com/photo.jpg"
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm
-                         focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+              className="form-input"
             />
           </div>
         </div>
@@ -90,8 +89,8 @@ export default function EditProfile() {
           ['fullName',      'Full Name',  'text',  'John Doe'],
           ['profilePicUrl', null],  // rendered above
         ].filter(([, label]) => label !== null).map(([key, label, type, ph]) => (
-          <div key={key} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div key={key} className="form-group">
+            <label className="form-label">
               {label}
             </label>
             <input
@@ -99,40 +98,34 @@ export default function EditProfile() {
               value={form[key]}
               onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
               placeholder={ph}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm
-                         focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+              className="form-input"
             />
           </div>
         ))}
 
-        <div className="mb-5">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+        <div className="form-group">
+          <label className="form-label">Bio</label>
           <textarea
             value={form.bio}
             onChange={e => setForm(p => ({ ...p, bio: e.target.value }))}
             rows={3}
             maxLength={500}
             placeholder="Tell people about yourself…"
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm
-                       resize-none focus:outline-none focus:ring-2
-                       focus:ring-blue-300 transition"
+            className="form-textarea"
           />
         </div>
 
-        <div className="flex gap-3 justify-end">
+        <div className="form-actions">
           <button
             onClick={() => navigate(-1)}
-            className="px-4 py-2 text-sm border border-gray-200 rounded-xl
-                       hover:bg-gray-50 transition"
+            className="secondary-button"
           >
             Cancel
           </button>
           <button
             onClick={() => updateMutation.mutate()}
             disabled={updateMutation.isPending}
-            className="px-5 py-2 bg-blue-600 text-white text-sm rounded-xl
-                       hover:bg-blue-700 transition font-medium
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+            className="primary-button"
           >
             {updateMutation.isPending ? 'Saving…' : 'Save Changes'}
           </button>
@@ -140,31 +133,27 @@ export default function EditProfile() {
       </div>
 
       {/* Change Password */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h3 className="font-semibold text-gray-800 mb-4">Change Password</h3>
-        <div className="space-y-3">
+      <div className="section-card section-card--spacious">
+        <h3 className="section-card__title">Change Password</h3>
+        <div className="form-stack">
           <input
             type="password"
             value={pwForm.currentPassword}
             onChange={e => setPwForm(p => ({ ...p, currentPassword: e.target.value }))}
             placeholder="Current password"
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm
-                       focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+            className="form-input"
           />
           <input
             type="password"
             value={pwForm.newPassword}
             onChange={e => setPwForm(p => ({ ...p, newPassword: e.target.value }))}
             placeholder="New password (min 8 characters)"
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm
-                       focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+            className="form-input"
           />
           <button
             onClick={() => pwMutation.mutate()}
             disabled={pwMutation.isPending || !pwForm.currentPassword || !pwForm.newPassword}
-            className="w-full py-2 border border-red-300 text-red-600 text-sm
-                       rounded-xl hover:bg-red-50 transition font-medium
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+            className="danger-outline-button danger-outline-button--full"
           >
             {pwMutation.isPending ? 'Changing…' : 'Change Password'}
           </button>

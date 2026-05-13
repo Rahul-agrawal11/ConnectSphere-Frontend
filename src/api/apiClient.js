@@ -1,92 +1,89 @@
 import axios from 'axios';
 
+const BASE_URL = 'http://localhost:8080';
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 15000,
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// ── Request: attach JWT from localStorage ───────────────────────────────────
-apiClient.interceptors.request.use(config => {
-  const token = localStorage.getItem('cs_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// ── Request interceptor: attach Bearer token ──────────────
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-// ── Response: handle 401 with refresh-token flow ────────────────────────────
+// ── Response interceptor: auto-refresh on 401 ─────────────
 let isRefreshing = false;
 let failedQueue = [];
 
-function processQueue(error, token = null) {
-  failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) prom.reject(error);
+    else prom.resolve(token);
   });
   failedQueue = [];
-}
+};
 
 apiClient.interceptors.response.use(
-  res => res,
-  async err => {
-    const originalRequest = err.config;
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-    if (err.response?.status === 401 && !originalRequest._retry) {
-      const refreshToken = localStorage.getItem('cs_refresh');
-
-      // No refresh token → clear session and redirect
-      if (!refreshToken) {
-        localStorage.removeItem('cs_token');
-        localStorage.removeItem('cs_refresh');
-        localStorage.removeItem('cs_user');
-        window.location.href = '/login';
-        return Promise.reject(err);
-      }
-
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      localStorage.getItem('refreshToken')
+    ) {
       if (isRefreshing) {
-        // Queue the failed request until refresh completes
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return apiClient(originalRequest);
-        }).catch(e => Promise.reject(e));
+        })
+          .then((token) => {
+            originalRequest.headers['Authorization'] = `Bearer ${token}`;
+            return apiClient(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
       try {
+        const refreshToken = localStorage.getItem('refreshToken');
         const res = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/v1/auth/refresh`,
-          null,
-          { params: { refreshToken } }
+          `${BASE_URL}/api/v1/auth/refresh?refreshToken=${refreshToken}`
         );
-        const { accessToken, refreshToken: newRefresh } = res.data.data;
-        localStorage.setItem('cs_token', accessToken);
-        if (newRefresh) localStorage.setItem('cs_refresh', newRefresh);
+        const newAccessToken = res.data.data.accessToken;
+        const newRefreshToken = res.data.data.refreshToken;
 
-        apiClient.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        processQueue(null, accessToken);
+        localStorage.setItem('accessToken', newAccessToken);
+        localStorage.setItem('refreshToken', newRefreshToken);
+
+        apiClient.defaults.headers['Authorization'] = `Bearer ${newAccessToken}`;
+        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+
+        processQueue(null, newAccessToken);
         return apiClient(originalRequest);
-      } catch (refreshErr) {
-        processQueue(refreshErr, null);
-        localStorage.removeItem('cs_token');
-        localStorage.removeItem('cs_refresh');
-        localStorage.removeItem('cs_user');
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        localStorage.clear();
         window.location.href = '/login';
-        return Promise.reject(refreshErr);
+        return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
     }
 
-    return Promise.reject(err);
+    return Promise.reject(error);
   }
 );
 

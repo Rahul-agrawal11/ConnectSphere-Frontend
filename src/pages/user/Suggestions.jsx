@@ -20,8 +20,8 @@ export default function Suggestions() {
   const userIds = data?.data?.data || [];
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="text-xl font-semibold text-gray-800 mb-4">
+    <div className="page-container page-container--narrow">
+      <h1 className="page-title">
         People you might know
       </h1>
 
@@ -35,15 +35,14 @@ export default function Suggestions() {
           action={
             <Link
               to="/search?type=users"
-              className="px-5 py-2 bg-blue-600 text-white rounded-xl
-                         hover:bg-blue-700 transition text-sm font-medium"
+              className="primary-button"
             >
               Search Users
             </Link>
           }
         />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 shadow-sm">
+        <div className="user-list-card">
           {userIds.map(uid => (
             <SuggestionCard key={uid} userId={uid} />
           ))}
@@ -76,32 +75,29 @@ function SuggestionCard({ userId }) {
   if (!profile) return null;
 
   return (
-    <div className="flex items-center gap-3 p-4">
+    <div className="suggestion-card">
       <Link to={`/profile/${userId}`}>
         <Avatar src={profile.profilePicUrl} name={profile.username} size={10} />
       </Link>
-      <div className="flex-1 min-w-0">
+      <div className="suggestion-card__info">
         <Link
           to={`/profile/${userId}`}
-          className="font-medium text-gray-900 hover:text-blue-600 transition block truncate"
+          className="suggestion-card__name"
         >
           {profile.fullName || profile.username}
         </Link>
-        <p className="text-sm text-gray-500 truncate">@{profile.username}</p>
+        <p className="suggestion-card__handle">@{profile.username}</p>
       </div>
       {!followed ? (
         <button
           onClick={() => mutation.mutate()}
           disabled={mutation.isPending}
-          className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-xl
-                     hover:bg-blue-700 transition font-medium
-                     disabled:opacity-50 flex-shrink-0"
+          className="primary-button primary-button--sm suggestion-card__action"
         >
           Follow
         </button>
       ) : (
-        <span className="px-4 py-1.5 border border-gray-200 text-gray-500
-                         text-sm rounded-xl flex-shrink-0">
+        <span className="following-badge">
           Following ✓
         </span>
       )}
