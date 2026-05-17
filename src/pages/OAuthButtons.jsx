@@ -7,7 +7,7 @@ import './OAuthButtons.css';
 // Clicking these causes a full browser redirect — Spring handles the
 // OAuth dance and redirects back to the frontend with a JWT token
 // via the success redirect URL configured in your backend.
-const AUTH_SERVICE_BASE = 'http://localhost:8081';
+const AUTH_SERVICE_BASE = 'http://3.25.136.37.nip.io:8080';
 
 const OAuthButtons = () => {
   const handleGoogle = () => {

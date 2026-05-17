@@ -5,9 +5,9 @@ import toast from 'react-hot-toast';
 
 // Read OAuth2 URLs from environment — never hardcode localhost paths
 const GOOGLE_OAUTH_URL = import.meta.env.VITE_GOOGLE_OAUTH_URL
-  || 'http://localhost:8080/oauth2/authorization/google';
+  || 'http://3.25.136.37.nip.io:8080/oauth2/authorization/google';
 const GITHUB_OAUTH_URL = import.meta.env.VITE_GITHUB_OAUTH_URL
-  || 'http://localhost:8080/oauth2/authorization/github';
+  || 'http://3.25.136.37.nip.io:8080/oauth2/authorization/github';
 
 export default function Login() {
   const { login } = useAuth();
