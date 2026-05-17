@@ -6,77 +6,94 @@ import { useToast } from '../components/common/Toast';
 import Spinner from '../components/common/Spinner';
 import './OAuthCallback.css';
 
-/**
- * Backend redirects to:
- *   http://localhost:5173/oauth2/callback?token=ACCESS_TOKEN&userId=123
- *
- * No refreshToken is sent by the backend — we just store the access token.
- */
 const OAuthCallback = () => {
-  const [searchParams]    = useSearchParams();
-  const { loginUser }     = useAuth();
-  const { addToast }      = useToast();
-  const navigate          = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { loginUser } = useAuth();
+  const { addToast } = useToast();
+  const navigate = useNavigate();
   const [error, setError] = useState('');
 
   useEffect(() => {
     handleCallback();
   }, []);
 
+  const decodeToken = (token) => {
+    try {
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch {
+      return {};
+    }
+  };
+
   const handleCallback = async () => {
-    const token      = searchParams.get('token')
-                    || searchParams.get('accessToken')
-                    || searchParams.get('access_token');
+    const token =
+      searchParams.get('token') ||
+      searchParams.get('accessToken') ||
+      searchParams.get('access_token');
+
     const errorParam = searchParams.get('error');
 
     if (errorParam) {
-      const msg = decodeURIComponent(errorParam);
-      setError(msg);
-      addToast(`OAuth failed: ${msg}`, 'error');
+      setError(errorParam);
+      addToast(`OAuth failed: ${errorParam}`, 'error');
       setTimeout(() => navigate('/login'), 3000);
       return;
     }
 
     if (!token) {
-      setError('No token received from OAuth provider. Please try again.');
+      setError('No token received from OAuth provider.');
       addToast('OAuth login failed — no token received', 'error');
       setTimeout(() => navigate('/login'), 3000);
       return;
     }
 
-    // FIX: Store token FIRST so getMyProfile() has Authorization header
     localStorage.setItem('accessToken', token);
+    localStorage.setItem('cs_token', token);
+
+    const payload = decodeToken(token);
+    const fallbackUser = {
+      id: searchParams.get('userId') || payload.sub,
+      username: payload.username || payload.email?.split('@')[0] || 'user',
+      email: payload.email || '',
+      role: payload.role || 'USER',
+    };
 
     try {
-      const res     = await getMyProfile();
+      const res = await getMyProfile();
       const profile = res.data.data;
 
-      loginUser({
-        accessToken:  token,
-        refreshToken: '',
-        userId:       profile.id,
-        username:     profile.username,
-        email:        profile.email,
-        role:         profile.role,
-      });
+      const user = {
+        id: profile.id,
+        username: profile.username,
+        email: profile.email,
+        role: profile.role,
+      };
 
-      addToast(`Welcome, ${profile.username}! 🎉`, 'success');
-    } catch (err) {
-      // Profile fetch failed — still log in with userId from URL
-      const userId = searchParams.get('userId');
+      localStorage.setItem('cs_user', JSON.stringify(user));
+
       loginUser({
-        accessToken:  token,
+        accessToken: token,
         refreshToken: '',
-        userId:       userId,
-        username:     'User',
-        email:        '',
-        role:         'USER',
+        userId: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
       });
-      addToast('Logged in via OAuth!', 'success');
+    } catch {
+      localStorage.setItem('cs_user', JSON.stringify(fallbackUser));
+
+      loginUser({
+        accessToken: token,
+        refreshToken: '',
+        userId: fallbackUser.id,
+        username: fallbackUser.username,
+        email: fallbackUser.email,
+        role: fallbackUser.role,
+      });
     }
 
-    // FIX: flush React state from loginUser before ProtectedRoute checks auth
-    setTimeout(() => navigate('/', { replace: true }), 0);
+    addToast('Logged in successfully!', 'success');
+    navigate('/feed', { replace: true });
   };
 
   return (
@@ -93,9 +110,7 @@ const OAuthCallback = () => {
           <>
             <Spinner size={44} />
             <h2 className="oauth-callback__title">Signing you in…</h2>
-            <p className="oauth-callback__msg">
-              Please wait while we complete your sign-in.
-            </p>
+            <p className="oauth-callback__msg">Please wait while we complete your sign-in.</p>
           </>
         )}
       </div>
